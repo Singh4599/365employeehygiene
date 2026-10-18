@@ -6,94 +6,63 @@
   <title>L V Spices — Employee Personal Hygiene Record</title>
   <meta name="description" content="L V Spices Employee Personal Hygiene Record — FSSAI Schedule 4 GMP Compliance & Daily Employee Hygiene Tracking." />
   
-  <!-- Google Fonts: DM Sans, Playfair Display & Marck Script -->
+  <!-- Google Fonts: Inter, Playfair Display & Marck Script -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;0,9..40,900;1,9..40,400;1,9..40,600&family=Playfair+Display:ital,wght@0,600;0,700;0,800;0,900;1,700&family=Alex+Brush&family=Marck+Script&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;0,800;0,900;1,700&family=Alex+Brush&family=Marck+Script&display=swap" rel="stylesheet" />
   
   <!-- SheetJS for Excel Exports -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <link rel="stylesheet" href="css/style.css?v=2.1.0" />
+  <link rel="stylesheet" href="css/style.css?v=3.0.0" />
 </head>
 <body>
 
-<!-- ── TOP BAR (DEEP BURGUNDY SPICE NAVBAR MATCHING MOCKUP) ── -->
-<header class="top-bar">
-  <div class="top-bar-left">
-    <!-- Mobile Hamburger Toggle -->
-    <button class="mobile-nav-toggle" id="mobile-menu-btn" onclick="toggleMobileSidebar()" aria-label="Toggle Navigation">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="22" height="22">
-        <line x1="3" y1="12" x2="21" y2="12"></line>
-        <line x1="3" y1="6" x2="21" y2="6"></line>
-        <line x1="3" y1="18" x2="21" y2="18"></line>
-      </svg>
-    </button>
-
-    <!-- LV Spices Circular Crest Logo -->
-    <div class="top-logo-crest-wrap">
-      <img src="assets/lv_spices_logo.jpg" alt="LV Spices Crest" class="top-logo-img" />
-    </div>
-
-    <div class="top-brand-text">
-      <div class="top-studio-title">EMPLOYEE PERSONAL HYGIENE RECORD</div>
-      <div class="top-studio-sub">FOOD SAFETY &bull; QUALITY &bull; PEOPLE</div>
-    </div>
-  </div>
-
-  <div class="top-bar-center">
-    <div class="top-cloud-pill" id="cloud-status-badge">
-      <span class="cloud-dot"></span>
-      <span id="cloud-status-text">Cloud Synced (Firestore)</span>
-    </div>
-  </div>
-
-  <div class="top-bar-right">
-    <div class="top-date-meta">
-      <div class="top-date" id="top-date">10 October 2026</div>
-      <div class="top-supervisor">Mukesh Vora (QA / Supervisor)</div>
-    </div>
-    <div class="top-avatar-wrap" title="Supervisor: Mukesh Vora">
-      <div class="top-avatar">MV</div>
-      <svg class="top-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
-        <polyline points="6 9 12 15 18 9"></polyline>
-      </svg>
-    </div>
-  </div>
-</header>
+<!-- Hidden Functional Elements for Firebase Sync & Clock compatibility -->
+<div id="cloud-status-badge" style="display:none;">
+  <span id="cloud-status-text">Cloud Synced</span>
+  <span id="top-date"></span>
+  <span id="top-time"></span>
+</div>
 
 <!-- Mobile Sidebar Backdrop Overlay -->
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
 
-<!-- ── MAIN LAYOUT ── -->
+<!-- ── MAIN DASHBOARD CONTAINER (NO TOP HEADER) ── -->
 <div class="main-layout">
 
-  <!-- ── SIDEBAR (LINEN WHITE WITH BOTANICAL WATERMARK & SPICES OVERLAY) ── -->
+  <!-- ── SIDEBAR (210px, EXTENDS FULL HEIGHT) ── -->
   <aside class="sidebar" id="sidebar">
-    <!-- Mobile close button -->
+    <!-- Mobile Close Button -->
     <button class="sidebar-close-btn" onclick="toggleMobileSidebar()" aria-label="Close Sidebar">✕</button>
 
-    <!-- Botanical Leaf Watermark at top -->
-    <div class="sidebar-leaves-decor"></div>
+    <!-- Top Centered New Luxury LV Spices Logo -->
+    <div class="sidebar-logo-wrap">
+      <img src="assets/lv-logo-new.webp" alt="LV Spices Logo" class="sidebar-logo-img" />
+    </div>
 
+    <!-- Navigation (Only 3 Items) -->
     <nav class="side-nav">
       <a class="side-nav-item active" data-view="daily" onclick="switchView('daily')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        <span>Daily Register</span>
+      </a>
+
+      <a class="side-nav-item" data-view="monthly" onclick="switchView('monthly')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
           <rect x="3" y="4" width="18" height="18" rx="2"></rect>
           <line x1="16" y1="2" x2="16" y2="6"></line>
           <line x1="8" y1="2" x2="8" y2="6"></line>
           <line x1="3" y1="10" x2="21" y2="10"></line>
         </svg>
-        <span>Daily Register</span>
-      </a>
-      <a class="side-nav-item" data-view="monthly" onclick="switchView('monthly')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
-          <rect x="3" y="3" width="7" height="7"></rect>
-          <rect x="14" y="3" width="7" height="7"></rect>
-          <rect x="14" y="14" width="7" height="7"></rect>
-          <rect x="3" y="14" width="7" height="7"></rect>
-        </svg>
         <span>Monthly Matrix</span>
       </a>
+
       <a class="side-nav-item" data-view="history" onclick="switchView('history')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
           <circle cx="12" cy="12" r="10"></circle>
@@ -103,37 +72,46 @@
       </a>
     </nav>
 
-    <!-- Sidebar Bottom Spices Photography & Stats -->
-    <div class="sidebar-bottom-area">
-      <div class="sidebar-spices-art" style="background-image: url('assets/sidebar_spices.jpg');"></div>
-      
-      <div class="sidebar-stats-row">
-        <div class="side-stat-box">
-          <div class="side-stat-val" id="side-employees">11</div>
-          <div class="side-stat-title">ACTIVE STAFF</div>
-        </div>
-        <div class="side-stat-divider"></div>
-        <div class="side-stat-box">
-          <div class="side-stat-val" id="side-month-days">October</div>
-          <div class="side-stat-title">CURRENT CYCLE</div>
-        </div>
+    <!-- Sidebar Bottom Spice Botanical Illustration Artwork -->
+    <div class="sidebar-art-container">
+      <img src="assets/hygiene-sidebar.webp" alt="Spice Botanical Artwork" class="sidebar-botanical-art" />
+    </div>
+
+    <!-- Sidebar Bottom Stats (Clean 2-Column Layout) -->
+    <div class="sidebar-bottom-stats">
+      <div class="side-stat-col">
+        <div class="side-stat-val" id="side-employees">11</div>
+        <div class="side-stat-label">ACTIVE<br />STAFF</div>
+      </div>
+      <div class="side-stat-col">
+        <div class="side-stat-val" id="side-month-days">October</div>
+        <div class="side-stat-label">CURRENT<br />CYCLE</div>
       </div>
     </div>
   </aside>
 
-  <!-- ── MAIN CONTENT WRAPPER ── -->
+  <!-- ── MAIN CONTENT (BEGINS DIRECTLY AT TOP) ── -->
   <main class="content-wrap">
 
-    <!-- ── TOP ACTION BAR (TOOLBAR) ── -->
-    <section class="toolbar">
-      <div class="toolbar-left">
-        <button class="tb-btn tb-arrow-btn" id="btn-prev" onclick="changePeriod(-1)" title="Previous Day">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16">
+    <!-- ── TOP ACTION BAR (DATE CONTROLS & ACTION BUTTONS ONLY) ── -->
+    <header class="top-action-bar">
+      <div class="tab-left">
+        <!-- Mobile Drawer Toggle -->
+        <button class="mobile-menu-trigger" onclick="toggleMobileSidebar()" aria-label="Toggle Menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="20" height="20">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+
+        <button class="date-arrow-btn" id="btn-prev" onclick="changePeriod(-1)" title="Previous Day">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="16" height="16">
             <polyline points="15 18 9 12 15 6"></polyline>
           </svg>
         </button>
-        
-        <div class="period-display-pill" id="period-display">
+
+        <div class="date-display-card" id="period-display">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
             <rect x="3" y="4" width="18" height="18" rx="2"></rect>
             <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -143,16 +121,16 @@
           <span id="period-label">Sat, 10 Oct, 2026</span>
         </div>
 
-        <button class="tb-btn tb-arrow-btn" id="btn-next" onclick="changePeriod(1)" title="Next Day">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16">
+        <button class="date-arrow-btn" id="btn-next" onclick="changePeriod(1)" title="Next Day">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="16" height="16">
             <polyline points="9 18 15 12 9 6"></polyline>
           </svg>
         </button>
       </div>
 
-      <div class="toolbar-right">
-        <!-- Excel Export Button -->
-        <button class="tb-btn-excel" onclick="openExportModal()">
+      <div class="tab-right">
+        <!-- Export Excel (.xlsx) -->
+        <button class="btn-export-excel" onclick="openExportModal()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
             <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path>
             <polyline points="14 2 14 8 20 8"></polyline>
@@ -161,9 +139,9 @@
           </svg>
           <span>Export Excel (.xlsx)</span>
         </button>
-        
-        <!-- Save to Cloud Button -->
-        <button class="tb-btn-save" onclick="saveData()">
+
+        <!-- Save to Cloud -->
+        <button class="btn-save-cloud" onclick="saveData()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
             <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"></path>
             <polyline points="17 21 17 13 7 13 7 21"></polyline>
@@ -172,171 +150,166 @@
           <span>Save to Cloud</span>
         </button>
       </div>
-    </section>
+    </header>
 
-    <!-- ── DAILY VIEW ── -->
-    <div class="view-area" id="view-daily">
-      
-      <!-- ── HERO BANNER CARD (MATCHING REFERENCE MOCKUP WITH SPICE PANORAMA) ── -->
-      <section class="hero-card">
-        <div class="hero-left-col">
-          <div class="hero-brand-overline">L V &nbsp; S P I C E S</div>
-          <h1 class="hero-title">
+    <!-- ── DAILY REGISTER VIEW ── -->
+    <div class="view-container" id="view-daily">
+
+      <!-- ── PREMIUM HERO BANNER (USING hygiene-hero.webp) ── -->
+      <section class="hero-banner-card">
+        <div class="hero-text-content">
+          <div class="hero-brand-tag">L V &nbsp; S P I C E S</div>
+          <h1 class="hero-heading">
             Employee Personal<br />
-            <span class="hero-title-wine">Hygiene Record</span>
+            <span class="hero-accent">Hygiene Record</span>
           </h1>
 
-          <!-- 4 Metadata Chips -->
-          <div class="hero-chips-wrap">
-            <div class="hero-chip">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+          <!-- Horizontal Metadata Row with Outline Icons & Vertical Dividers -->
+          <div class="hero-meta-row">
+            <div class="hero-meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
                 <rect x="3" y="4" width="18" height="18" rx="2"></rect>
                 <line x1="16" y1="2" x2="16" y2="6"></line>
                 <line x1="8" y1="2" x2="8" y2="6"></line>
                 <line x1="3" y1="10" x2="21" y2="10"></line>
               </svg>
-              <div class="chip-content">
-                <span class="chip-label">Date</span>
-                <strong class="chip-val" id="daily-meta-date">10/10/2026</strong>
+              <div class="meta-detail">
+                <span class="meta-label">Date</span>
+                <strong class="meta-val" id="daily-meta-date">10/10/2026</strong>
               </div>
             </div>
 
-            <div class="hero-chip">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+            <div class="meta-divider"></div>
+
+            <div class="hero-meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
                 <rect x="3" y="4" width="18" height="18" rx="2"></rect>
                 <line x1="16" y1="2" x2="16" y2="6"></line>
                 <line x1="8" y1="2" x2="8" y2="6"></line>
                 <line x1="3" y1="10" x2="21" y2="10"></line>
               </svg>
-              <div class="chip-content">
-                <span class="chip-label">Month</span>
-                <strong class="chip-val" id="daily-meta-month">October</strong>
+              <div class="meta-detail">
+                <span class="meta-label">Month</span>
+                <strong class="meta-val" id="daily-meta-month">October</strong>
               </div>
             </div>
 
-            <div class="hero-chip">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+            <div class="meta-divider"></div>
+
+            <div class="hero-meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
                 <rect x="3" y="4" width="18" height="18" rx="2"></rect>
                 <line x1="16" y1="2" x2="16" y2="6"></line>
                 <line x1="8" y1="2" x2="8" y2="6"></line>
                 <line x1="3" y1="10" x2="21" y2="10"></line>
               </svg>
-              <div class="chip-content">
-                <span class="chip-label">Year</span>
-                <strong class="chip-val" id="daily-meta-year">2026</strong>
+              <div class="meta-detail">
+                <span class="meta-label">Year</span>
+                <strong class="meta-val" id="daily-meta-year">2026</strong>
               </div>
             </div>
 
-            <div class="hero-chip hero-chip-wide">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+            <div class="meta-divider"></div>
+
+            <div class="hero-meta-item meta-dept">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
                 <path d="M3 21h18M3 7v14M21 7v14M6 11h4M6 15h4M14 11h4M14 15h4M9 3l3 4 3-4"></path>
               </svg>
-              <div class="chip-content">
-                <span class="chip-label">Department / Area</span>
-                <strong class="chip-val">Manufacturing &amp; Packaging</strong>
+              <div class="meta-detail">
+                <span class="meta-label">Department / Area</span>
+                <strong class="meta-val">Manufacturing &amp; Packaging</strong>
               </div>
             </div>
           </div>
         </div>
-
-        <!-- Hero Spices Panoramic Photography Right Side -->
-        <div class="hero-right-col">
-          <img src="assets/hero_spices.jpg" alt="LV Spices Culinary Bowls" class="hero-spices-banner" />
-        </div>
       </section>
 
-      <!-- ── 3 QUICK METRIC CARDS WITH CIRCULAR RINGS ── -->
-      <section class="metric-cards-grid">
-        <!-- Metric Card 1: Cleared -->
-        <div class="metric-card metric-card-green">
-          <div class="metric-card-left">
-            <div class="metric-icon-circle bg-green-subtle">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" width="20" height="20">
+      <!-- ── EXACTLY THREE STATISTICS CARDS ── -->
+      <section class="stat-cards-grid">
+        <!-- Card 1: Cleared (OK) -->
+        <div class="stat-card stat-card-green">
+          <div class="stat-card-left">
+            <div class="stat-icon-circle bg-mint">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#15965B" stroke-width="2.2" width="20" height="20">
                 <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"></path>
                 <circle cx="9" cy="7" r="4"></circle>
                 <path d="M23 21v-2a4 4 0 00-3-3.87"></path>
                 <path d="M16 3.13a4 4 0 010 7.75"></path>
               </svg>
             </div>
-            <div class="metric-info">
-              <div class="metric-num" id="stat-ok-daily">11</div>
-              <div class="metric-label">Employees Cleared (OK)</div>
+            <div class="stat-text-wrap">
+              <div class="stat-num" id="stat-ok-daily">11</div>
+              <div class="stat-label">Employees Cleared (OK)</div>
             </div>
           </div>
-          <div class="metric-ring-wrap">
-            <svg class="metric-ring-svg" viewBox="0 0 44 44">
-              <circle class="ring-bg ring-bg-green" cx="22" cy="22" r="17"></circle>
-              <circle class="ring-fg ring-fg-green" id="ring-ok-prog" cx="22" cy="22" r="17" stroke-dasharray="106.8" stroke-dashoffset="0"></circle>
-            </svg>
+          <div class="stat-indicator-badge badge-green-check">
+            ✔
           </div>
         </div>
 
-        <!-- Metric Card 2: Deficiencies -->
-        <div class="metric-card metric-card-red">
-          <div class="metric-card-left">
-            <div class="metric-icon-circle bg-red-subtle">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" width="20" height="20">
-                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"></path>
-                <line x1="12" y1="9" x2="12" y2="13"></line>
-                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        <!-- Card 2: Deficiencies (X) -->
+        <div class="stat-card stat-card-blush">
+          <div class="stat-card-left">
+            <div class="stat-icon-circle bg-blush">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#B51226" stroke-width="2.2" width="20" height="20">
+                <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"></path>
+                <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                <line x1="9" y1="12" x2="15" y2="12"></line>
+                <line x1="9" y1="16" x2="13" y2="16"></line>
               </svg>
             </div>
-            <div class="metric-info">
-              <div class="metric-num" id="stat-fail-daily">0</div>
-              <div class="metric-label">Deficiencies (X)</div>
+            <div class="stat-text-wrap">
+              <div class="stat-num" id="stat-fail-daily">0</div>
+              <div class="stat-label">Deficiencies (X)</div>
             </div>
           </div>
-          <div class="metric-ring-wrap">
-            <svg class="metric-ring-svg" viewBox="0 0 44 44">
-              <circle class="ring-bg ring-bg-red" cx="22" cy="22" r="17"></circle>
-              <circle class="ring-fg ring-fg-red" id="ring-fail-prog" cx="22" cy="22" r="17" stroke-dasharray="106.8" stroke-dashoffset="106.8"></circle>
-            </svg>
+          <div class="stat-indicator-badge badge-red-cross">
+            ✖
           </div>
         </div>
 
-        <!-- Metric Card 3: Compliance -->
-        <div class="metric-card metric-card-amber">
-          <div class="metric-card-left">
-            <div class="metric-icon-circle bg-amber-subtle">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" width="20" height="20">
+        <!-- Card 3: Hygiene Compliance -->
+        <div class="stat-card stat-card-ivory">
+          <div class="stat-card-left">
+            <div class="stat-icon-circle bg-amber">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2.2" width="20" height="20">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                <polyline points="9 12 11 14 15 10"></polyline>
               </svg>
             </div>
-            <div class="metric-info">
-              <div class="metric-num" id="stat-score-daily">100%</div>
-              <div class="metric-label">Hygiene Compliance</div>
+            <div class="stat-text-wrap">
+              <div class="stat-num" id="stat-score-daily">100%</div>
+              <div class="stat-label">Hygiene Compliance</div>
             </div>
           </div>
-          <div class="metric-ring-wrap">
-            <svg class="metric-ring-svg" viewBox="0 0 44 44">
-              <circle class="ring-bg ring-bg-amber" cx="22" cy="22" r="17"></circle>
-              <circle class="ring-fg ring-fg-amber" id="ring-score-prog" cx="22" cy="22" r="17" stroke-dasharray="106.8" stroke-dashoffset="0"></circle>
+          <div class="stat-ring-container">
+            <svg class="compliance-ring-svg" viewBox="0 0 44 44">
+              <circle class="c-ring-bg" cx="22" cy="22" r="16"></circle>
+              <circle class="c-ring-fg" id="ring-score-prog" cx="22" cy="22" r="16" stroke-dasharray="100.5" stroke-dashoffset="0"></circle>
             </svg>
           </div>
         </div>
       </section>
 
-      <!-- ── CHECKLIST REGISTER TABLE (CARD CONTAINER WITH HORIZONTAL SCROLL) ── -->
-      <section class="table-card">
-        <div class="mobile-table-hint">⇄ Swipe horizontally to view all hygiene checklist columns</div>
-        <div class="table-scroll-wrap">
-          <table class="daily-hygiene-table" id="daily-table">
+      <!-- ── EMPLOYEE HYGIENE REGISTER TABLE ── -->
+      <section class="table-container-card">
+        <div class="mobile-table-hint">⇄ Swipe horizontally to inspect checklist columns</div>
+        <div class="table-scroll-area">
+          <table class="employee-data-table" id="daily-table">
             <thead>
               <tr>
-                <th class="th-num">#</th>
-                <th class="th-date">DATE</th>
-                <th class="th-name">EMPLOYEE NAME</th>
-                <th class="th-check">
-                  <div class="th-with-icon">
+                <th class="th-col-num">#</th>
+                <th class="th-col-date">DATE</th>
+                <th class="th-col-name">EMPLOYEE NAME</th>
+                <th class="th-col-check">
+                  <div class="th-inner-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
                       <path d="M20.38 3.46L16 2a4 4 0 01-8 0L3.62 3.46a2 2 0 00-1.34 2.23l.58 3.47a1 1 0 00.99.84H6v10a2 2 0 002 2h8a2 2 0 002-2V10h2.15a1 1 0 00.99-.84l.58-3.47a2 2 0 00-1.34-2.23z"></path>
                     </svg>
                     <span>CLEAN UNIFORM</span>
                   </div>
                 </th>
-                <th class="th-check">
-                  <div class="th-with-icon">
+                <th class="th-col-check">
+                  <div class="th-inner-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
                       <path d="M18 11V6a2 2 0 00-2-2v0a2 2 0 00-2 2v0"></path>
                       <path d="M14 10V4a2 2 0 00-2-2v0a2 2 0 00-2 2v2"></path>
@@ -346,8 +319,8 @@
                     <span>HAND HYGIENE</span>
                   </div>
                 </th>
-                <th class="th-check">
-                  <div class="th-with-icon">
+                <th class="th-col-check">
+                  <div class="th-inner-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
                       <circle cx="6" cy="6" r="3"></circle>
                       <circle cx="6" cy="18" r="3"></circle>
@@ -358,28 +331,27 @@
                     <span>NAILS / HAIR</span>
                   </div>
                 </th>
-                <th class="th-check">
-                  <div class="th-with-icon">
+                <th class="th-col-check">
+                  <div class="th-inner-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
                       <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"></path>
                     </svg>
                     <span>HEALTH STATUS</span>
                   </div>
                 </th>
-                <th class="th-corr">
-                  <div class="th-with-icon">
+                <th class="th-col-corr">
+                  <div class="th-inner-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
                       <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path>
                       <polyline points="14 2 14 8 20 8"></polyline>
                       <line x1="16" y1="13" x2="8" y2="13"></line>
                       <line x1="16" y1="17" x2="8" y2="17"></line>
-                      <polyline points="10 9 9 9 8 9"></polyline>
                     </svg>
                     <span>CORRECTIVE ACTION</span>
                   </div>
                 </th>
-                <th class="th-supervisor">
-                  <div class="th-with-icon">
+                <th class="th-col-supervisor">
+                  <div class="th-inner-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
                       <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path>
                       <circle cx="12" cy="7" r="4"></circle>
@@ -396,113 +368,89 @@
         </div>
       </section>
 
-      <!-- ── BOTTOM SUMMARY & SIGN-OFF FOOTER CARD ── -->
-      <footer class="client-sheet-footer">
-        <div class="csf-left-legend">
-          <div class="csf-mark-label">Mark:</div>
-          <div class="csf-legend-pills">
-            <div class="legend-pill leg-ok">
-              <span class="legend-circle bg-ok-circle">✔</span>
+      <!-- ── BOTTOM LEGEND & SIGNATURE FOOTER CARD ── -->
+      <footer class="footer-sign-card">
+        <div class="fsc-left">
+          <div class="fsc-legend-line">
+            <span class="fsc-mark-heading">Mark:</span>
+            <div class="fsc-pill fsc-pill-ok">
+              <span class="fsc-dot bg-ok">✔</span>
               <span>OK = Satisfactory</span>
             </div>
-            <div class="legend-pill leg-fail">
-              <span class="legend-circle bg-fail-circle">✖</span>
+            <div class="fsc-pill fsc-pill-fail">
+              <span class="fsc-dot bg-fail">✖</span>
               <span>X = Unsatisfactory</span>
             </div>
-            <div class="legend-pill leg-na">
-              <span class="legend-circle bg-na-circle">—</span>
+            <div class="fsc-pill fsc-pill-na">
+              <span class="fsc-dot bg-na">—</span>
               <span>N/A = Not Applicable</span>
             </div>
           </div>
-          <div class="csf-sub-note">Record corrective actions and re-check any failures.</div>
+          <div class="fsc-note">Record corrective actions and re-check any failures.</div>
         </div>
 
-        <div class="csf-right-sign">
-          <div class="csf-sign-block">
-            <span class="csf-sign-caption">Supervisor Name / Signature:</span>
+        <div class="fsc-right">
+          <div class="fsc-sig-group">
+            <span class="fsc-sig-label">Supervisor Name / Signature:</span>
             <span class="signature-cursive">Mukesh Vora</span>
           </div>
-          <div class="csf-sign-date-block">
-            <span class="csf-date-caption">Date:</span>
-            <strong class="csf-date-val" id="csf-sign-date">10/10/2026</strong>
+          <div class="fsc-date-group">
+            <span class="fsc-date-label">Date:</span>
+            <strong class="fsc-date-value" id="csf-sign-date">10/10/2026</strong>
           </div>
         </div>
       </footer>
 
     </div><!-- end #view-daily -->
 
-    <!-- ── MONTHLY VIEW (COMPREHENSIVE 31-DAY MATRIX) ── -->
-    <div class="view-area" id="view-monthly" style="display:none;">
-      <section class="hero-card">
-        <div class="hero-left-col">
-          <div class="hero-brand-overline">L V &nbsp; S P I C E S</div>
-          <h1 class="hero-title">
+    <!-- ── MONTHLY MATRIX VIEW ── -->
+    <div class="view-container" id="view-monthly" style="display:none;">
+      <section class="hero-banner-card">
+        <div class="hero-text-content">
+          <div class="hero-brand-tag">L V &nbsp; S P I C E S</div>
+          <h1 class="hero-heading">
             Monthly Hygiene<br />
-            <span class="hero-title-wine">Compliance Matrix</span>
+            <span class="hero-accent">Compliance Matrix</span>
           </h1>
-          <div class="hero-chips-wrap">
-            <div class="hero-chip">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                <rect x="3" y="4" width="18" height="18" rx="2"></rect>
-                <line x1="16" y1="2" x2="16" y2="6"></line>
-                <line x1="8" y1="2" x2="8" y2="6"></line>
-                <line x1="3" y1="10" x2="21" y2="10"></line>
-              </svg>
-              <div class="chip-content">
-                <span class="chip-label">Month</span>
-                <strong class="chip-val" id="rh-month">October 2026</strong>
-              </div>
+          <div class="hero-meta-row">
+            <div class="hero-meta-item">
+              <span class="meta-label">Month</span>
+              <strong class="meta-val" id="rh-month">October 2026</strong>
             </div>
-            <div class="hero-chip">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-              </svg>
-              <div class="chip-content">
-                <span class="chip-label">Supervisor</span>
-                <strong class="chip-val">Mukesh Vora</strong>
-              </div>
+            <div class="meta-divider"></div>
+            <div class="hero-meta-item">
+              <span class="meta-label">Supervisor</span>
+              <strong class="meta-val">Mukesh Vora</strong>
             </div>
-            <div class="hero-chip hero-chip-wide">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-              </svg>
-              <div class="chip-content">
-                <span class="chip-label">FSSAI License</span>
-                <strong class="chip-val">11521018000452</strong>
-              </div>
+            <div class="meta-divider"></div>
+            <div class="hero-meta-item">
+              <span class="meta-label">FSSAI License</span>
+              <strong class="meta-val">11521018000452</strong>
             </div>
           </div>
-        </div>
-        <div class="hero-right-col">
-          <img src="assets/hero_spices.jpg" alt="LV Spices" class="hero-spices-banner" />
         </div>
       </section>
 
       <!-- Monthly Summary Stat Pills -->
-      <section class="stat-pills" id="stat-pills">
-        <!-- Rendered via JS -->
-      </section>
+      <section class="stat-pills" id="stat-pills"></section>
 
       <!-- Monthly Grid Card -->
-      <section class="table-card">
+      <section class="table-container-card">
         <div class="mobile-table-hint">⇄ Swipe horizontally to inspect all 31 days of the month</div>
-        <div class="grid-scroll">
-          <table class="grid-table" id="monthly-grid">
-            <!-- Rendered by JS -->
-          </table>
+        <div class="table-scroll-area">
+          <table class="grid-table" id="monthly-grid"></table>
         </div>
       </section>
 
       <!-- Issues This Month -->
       <section class="issues-block" id="issues-block" style="display:none;">
         <div class="issues-header">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#C8001E" stroke-width="2" width="18" height="18">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#B51226" stroke-width="2" width="16" height="16">
             <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
           </svg>
           <strong>Corrective Action Logs Recorded This Month</strong>
         </div>
-        <div class="table-scroll-wrap">
+        <div class="table-scroll-area">
           <table class="issues-table" id="issues-table">
             <thead>
               <tr>
@@ -520,18 +468,15 @@
     </div><!-- end #view-monthly -->
 
     <!-- ── AUDIT ARCHIVE VIEW ── -->
-    <div class="view-area" id="view-history" style="display:none;">
-      <section class="hero-card">
-        <div class="hero-left-col">
-          <div class="hero-brand-overline">L V &nbsp; S P I C E S</div>
-          <h1 class="hero-title">
+    <div class="view-container" id="view-history" style="display:none;">
+      <section class="hero-banner-card">
+        <div class="hero-text-content">
+          <div class="hero-brand-tag">L V &nbsp; S P I C E S</div>
+          <h1 class="hero-heading">
             Audit Archive &amp;<br />
-            <span class="hero-title-wine">Historical Logs</span>
+            <span class="hero-accent">Historical Logs</span>
           </h1>
-          <p style="color:#64748B; font-size:13.5px; margin-top:8px;">Access past monthly registers, compliance audit trails, and FSSAI export files.</p>
-        </div>
-        <div class="hero-right-col">
-          <img src="assets/hero_spices.jpg" alt="LV Spices" class="hero-spices-banner" />
+          <p style="color:#667085; font-size:13px; margin-top:6px;">Access past monthly registers, compliance audit trails, and FSSAI export files.</p>
         </div>
       </section>
 
@@ -547,13 +492,13 @@
           <option value="2026">2026</option>
           <option value="2025">2025</option>
         </select>
-        <button class="tb-btn-excel" onclick="exportReport('monthly')">Download Month Report (.xlsx)</button>
+        <button class="btn-export-excel" style="height:38px;" onclick="exportReport('monthly')">Download Month Report (.xlsx)</button>
       </div>
 
       <div id="history-list-container"></div>
     </div><!-- end #view-history -->
 
-  </main><!-- end .content-wrap -->
+  </main>
 </div><!-- end .main-layout -->
 
 <!-- ── EXCEL EXPORT MODAL ── -->
@@ -561,7 +506,7 @@
   <div class="modal-box" onclick="event.stopPropagation()">
     <div class="modal-header">
       <div class="modal-title-with-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2.2" width="22" height="22">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#0E5E3A" stroke-width="2.2" width="22" height="22">
           <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path>
           <polyline points="14 2 14 8 20 8"></polyline>
           <line x1="8" y1="13" x2="16" y2="13"></line>
@@ -572,7 +517,7 @@
       <button class="modal-close" onclick="closeExportModal()" aria-label="Close modal">✕</button>
     </div>
     <div class="modal-body">
-      <p style="color:#64748B; font-size:13px; margin-bottom:16px;">Download official FSSAI Schedule 4 formatted employee personal hygiene records.</p>
+      <p style="color:#667085; font-size:13px; margin-bottom:16px;">Download official FSSAI Schedule 4 formatted employee personal hygiene records.</p>
       
       <div class="export-options-grid">
         <button class="export-option-card" onclick="exportReport('daily')">
@@ -613,17 +558,17 @@
       </div>
 
       <div class="custom-range-box">
-        <div style="font-weight:700; font-size:13px; color:#1E293B; margin-bottom:8px;">Custom Date Range:</div>
+        <div style="font-weight:700; font-size:13px; color:#171923; margin-bottom:8px;">Custom Date Range:</div>
         <div class="range-inputs">
           <input type="date" id="export-from-date" class="form-input-sm" />
-          <span style="color:#64748B; font-size:12px;">to</span>
+          <span style="color:#667085; font-size:12px;">to</span>
           <input type="date" id="export-to-date" class="form-input-sm" />
-          <button class="tb-btn-excel" style="padding:7px 14px; font-size:12px;" onclick="exportReport('custom')">Download Range</button>
+          <button class="btn-export-excel" style="padding:6px 14px; font-size:12px; height:34px;" onclick="exportReport('custom')">Download Range</button>
         </div>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="tb-btn" onclick="closeExportModal()">Close</button>
+      <button class="btn-cancel" onclick="closeExportModal()">Close</button>
     </div>
   </div>
 </div>
@@ -648,7 +593,7 @@
     </div>
     <div class="modal-body">
       <div class="form-group">
-        <label class="form-label" style="font-weight:700; color:#334155; margin-bottom:6px; display:block;">Action Description</label>
+        <label class="form-label" style="font-weight:700; color:#344054; margin-bottom:6px; display:block;">Action Description</label>
         <input type="text" class="popup-input-field" id="popup-corr-input" autocomplete="off" placeholder="e.g. Nails trimmed on spot & sanitized before shift" />
         <div class="quick-suggest-row" id="popup-corr-suggest">
           <button type="button" class="suggest-pill" onclick="applyCorrSuggestion('Nails untrimmed, trimmed on spot & sanitized before shift')">Nails Trimmed</button>
@@ -659,8 +604,8 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button class="tb-btn" onclick="closeCorrPopup()">Cancel</button>
-      <button class="tb-btn-save" onclick="saveCorrPopup()">Save Action</button>
+      <button class="btn-cancel" onclick="closeCorrPopup()">Cancel</button>
+      <button class="btn-save-cloud" style="height:36px; padding:0 16px;" onclick="saveCorrPopup()">Save Action</button>
     </div>
   </div>
 </div>

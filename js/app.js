@@ -262,20 +262,8 @@ function renderDailyTable() {
   const statScore = document.getElementById('stat-score-daily');
   if (statScore) statScore.textContent = `${pct}%`;
 
-  // Circular Rings (Radius 17, Circumference = 106.8)
-  const c = 106.8;
-  const ringOk = document.getElementById('ring-ok-prog');
-  if (ringOk) {
-    const ratio = rows.length > 0 ? (okCount / rows.length) : 1;
-    ringOk.style.strokeDashoffset = (c * (1 - ratio)).toFixed(1);
-  }
-
-  const ringFail = document.getElementById('ring-fail-prog');
-  if (ringFail) {
-    const ratio = rows.length > 0 ? (failCount / rows.length) : 0;
-    ringFail.style.strokeDashoffset = (c * (1 - ratio)).toFixed(1);
-  }
-
+  // Circular Compliance Ring (Radius 16, Circumference = 100.5)
+  const c = 100.5;
   const ringScore = document.getElementById('ring-score-prog');
   if (ringScore) {
     const ratio = pct / 100;
