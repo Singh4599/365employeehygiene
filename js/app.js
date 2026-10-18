@@ -265,18 +265,66 @@ window.toggleStatusCell = function(empIdx, field) {
   renderCurrentView();
 };
 
+let activeCorrTargetIdx = null;
+
 window.editCorrectiveCell = function(empIdx) {
   const rows = allEmployeeRecords[currentDay];
   if (!rows || !rows[empIdx]) return;
 
-  const current = rows[empIdx].corrective || "";
-  const newVal = prompt("Enter Corrective Action Taken:", current);
-  if (newVal !== null) {
-    rows[empIdx].corrective = newVal.trim();
-    saveData(true);
-    renderCurrentView();
+  activeCorrTargetIdx = empIdx;
+  const emp = rows[empIdx];
+
+  document.getElementById('popup-corr-title').textContent = `Corrective Action — ${emp.name}`;
+  document.getElementById('popup-corr-sub').textContent = `Date: ${currentDay} • Recorded by Mukesh Vora`;
+
+  const input = document.getElementById('popup-corr-input');
+  input.value = emp.corrective || "";
+
+  document.getElementById('popup-edit-corr').style.display = 'flex';
+  setTimeout(() => { input.focus(); input.select(); }, 60);
+};
+
+window.applyCorrSuggestion = function(val) {
+  const input = document.getElementById('popup-corr-input');
+  if (input) {
+    input.value = val;
+    input.focus();
   }
 };
+
+window.saveCorrPopup = function() {
+  if (activeCorrTargetIdx === null) return;
+  const rows = allEmployeeRecords[currentDay];
+  if (!rows || !rows[activeCorrTargetIdx]) return;
+
+  const input = document.getElementById('popup-corr-input');
+  const val = input ? input.value.trim() : "";
+
+  rows[activeCorrTargetIdx].corrective = val;
+  closeCorrPopup();
+  saveData(true);
+  renderCurrentView();
+  showToast("Corrective action saved!");
+};
+
+window.closeCorrPopup = function() {
+  document.getElementById('popup-edit-corr').style.display = 'none';
+  activeCorrTargetIdx = null;
+};
+
+// Enter key saves, Escape closes
+document.addEventListener('keydown', (e) => {
+  const modal = document.getElementById('popup-edit-corr');
+  if (modal && modal.style.display === 'flex') {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      saveCorrPopup();
+    } else if (e.key === 'Escape') {
+      closeCorrPopup();
+    }
+  }
+});
+
 
 // ──────────────────────────────────────────────────────────────────────────────
 // RENDER MONTHLY MATRIX

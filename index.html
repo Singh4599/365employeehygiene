@@ -313,6 +313,40 @@
   </div>
 </div>
 
+<!-- ── IN-APP CORRECTIVE ACTION POPUP MODAL (REPLACING NATIVE PROMPT) ── -->
+<div class="modal-backdrop" id="popup-edit-corr" style="display:none;" onclick="closeCorrPopup()">
+  <div class="modal-box popup-slide-down" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title-with-icon">
+        <div class="popup-icon-badge" style="background:rgba(200,0,30,.1); color:var(--red);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </div>
+        <div>
+          <h3 id="popup-corr-title">Corrective Action Taken</h3>
+          <span class="popup-sub" id="popup-corr-sub">Log employee corrective measure</span>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeCorrPopup()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label" style="font-weight:700; color:#334155; margin-bottom:6px; display:block;">Action Description</label>
+        <input type="text" class="popup-input-field" id="popup-corr-input" autocomplete="off" />
+        <div class="quick-suggest-row" id="popup-corr-suggest" style="display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;">
+          <button type="button" class="suggest-pill" onclick="applyCorrSuggestion('Nails untrimmed, trimmed on spot & sanitized before shift')">Nails Trimmed</button>
+          <button type="button" class="suggest-pill" onclick="applyCorrSuggestion('Uniform soiled, replacement clean apron provided')">Apron Replaced</button>
+          <button type="button" class="suggest-pill" onclick="applyCorrSuggestion('Hands scrubbed with antibacterial soap at wash station')">Hands Washed</button>
+          <button type="button" class="suggest-pill" onclick="applyCorrSuggestion('Minor cold symptoms noted, assigned to non-contact area')">Non-Contact Area</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="tb-btn" onclick="closeCorrPopup()">Cancel</button>
+      <button class="tb-btn-primary" onclick="saveCorrPopup()">Save Action</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div class="toast-stack" id="toast-stack"></div>
 
