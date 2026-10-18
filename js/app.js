@@ -551,9 +551,9 @@ window.switchView = function(view) {
     el.classList.toggle('active', el.dataset.view === view);
   });
 
-  document.getElementById('view-daily').style.display = (view === 'daily') ? 'block' : 'none';
-  document.getElementById('view-monthly').style.display = (view === 'monthly') ? 'block' : 'none';
-  document.getElementById('view-history').style.display = (view === 'history') ? 'block' : 'none';
+  document.getElementById('view-daily').style.display = (view === 'daily') ? 'flex' : 'none';
+  document.getElementById('view-monthly').style.display = (view === 'monthly') ? 'flex' : 'none';
+  document.getElementById('view-history').style.display = (view === 'history') ? 'flex' : 'none';
 
   // Auto-close mobile drawer if open
   const sidebar = document.getElementById('sidebar');
@@ -569,53 +569,90 @@ window.switchView = function(view) {
 window.renderHistoryList = async function() {
   const listContainer = document.getElementById('history-list-container');
   if (!listContainer) return;
-  listContainer.innerHTML = '<div style="padding:20px; color:#64748B;">Loading archive records...</div>';
 
-  const cloud = await loadAllEmployeeRecordsFromCloud();
-  Object.assign(allEmployeeRecords, cloud);
-
-  // Read local storage keys
+  // 1. Gather local records immediately so user never waits
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i);
     if (k && k.startsWith('lv_emp_')) {
       const d = k.replace('lv_emp_', '');
       if (!allEmployeeRecords[d]) {
-        try { allEmployeeRecords[d] = JSON.parse(localStorage.getItem(k)); } catch(e) {}
+        try {
+          const parsed = JSON.parse(localStorage.getItem(k));
+          allEmployeeRecords[d] = Array.isArray(parsed) ? parsed : (parsed?.rows || []);
+        } catch(e) {}
       }
     }
   }
 
-  const mSel = document.getElementById('hist-month-sel');
-  const ySel = document.getElementById('hist-year-sel');
-  const prefix = `${ySel ? ySel.value : '2026'}-${mSel ? mSel.value.padStart(2,'0') : '10'}`;
-
-  const dates = Object.keys(allEmployeeRecords).filter(k => k.startsWith(prefix)).sort().reverse();
-
-  if (dates.length === 0) {
-    listContainer.innerHTML = `
-      <div style="text-align:center; padding:50px 20px; color:#64748B;">
-        <h3>No records found for ${prefix}</h3>
-        <p>Switch to October 2026 to see full compliant records.</p>
-      </div>
-    `;
-    return;
+  // Ensure current October days 1-18 are in memory
+  if (Object.keys(allEmployeeRecords).length === 0) {
+    pregenerateOctober2026Data();
   }
 
-  listContainer.innerHTML = dates.map(ds => {
-    const rows = allEmployeeRecords[ds] || [];
-    const issues = rows.filter(r => r.uniform === 'X' || r.hygiene === 'X' || r.nails === 'X' || r.health === 'X').length;
-    return `
-      <div class="history-item-row" onclick="selectDate('${ds}')">
-        <div class="hist-card-left">
-          <h4>${formatDateDisplay(ds)}</h4>
-          <p>Supervisor: Mukesh Vora • 11 Staff Verified</p>
+  function displayList() {
+    const mSel = document.getElementById('hist-month-sel');
+    const ySel = document.getElementById('hist-year-sel');
+    const prefix = `${ySel ? ySel.value : '2026'}-${mSel ? String(mSel.value).padStart(2,'0') : '10'}`;
+
+    const dates = Object.keys(allEmployeeRecords).filter(k => k.startsWith(prefix)).sort().reverse();
+
+    if (dates.length === 0) {
+      listContainer.innerHTML = `
+        <div style="text-align:center; padding:40px 20px; background:#FFFFFF; border:1px solid #E4E7EC; border-radius:12px; color:#667085;">
+          <h3 style="color:#171923; margin-bottom:6px;">No records found for ${prefix}</h3>
+          <p style="font-size:12.5px;">Switch month to October 2026 to see full compliant records.</p>
         </div>
-        <div>
-          <span class="hist-badge ${issues > 0 ? 'issues' : 'ok'}">${issues > 0 ? `${issues} Deficiencies` : '100% OK'}</span>
+      `;
+      return;
+    }
+
+    listContainer.innerHTML = dates.map(ds => {
+      let rows = allEmployeeRecords[ds];
+      if (rows && !Array.isArray(rows) && Array.isArray(rows.rows)) {
+        rows = rows.rows;
+        allEmployeeRecords[ds] = rows;
+      }
+      if (!Array.isArray(rows)) rows = [];
+
+      const issues = rows.filter(r => r.uniform === 'X' || r.hygiene === 'X' || r.nails === 'X' || r.health === 'X').length;
+      return `
+        <div class="history-item-row" onclick="selectDate('${ds}')">
+          <div class="hist-card-left">
+            <h4>${formatDateDisplay(ds)}</h4>
+            <p>Supervisor: Mukesh Vora • 11 Staff Verified</p>
+          </div>
+          <div>
+            <span class="hist-badge ${issues > 0 ? 'issues' : 'ok'}">${issues > 0 ? `${issues} Deficiencies` : '100% OK'}</span>
+          </div>
         </div>
-      </div>
-    `;
-  }).join('');
+      `;
+    }).join('');
+  }
+
+  // Display immediately from cache/localStorage
+  displayList();
+
+  // 2. Fetch cloud records in background with timeout
+  try {
+    const cloudPromise = loadAllEmployeeRecordsFromCloud();
+    const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(null), 2500));
+    const cloud = await Promise.race([cloudPromise, timeoutPromise]);
+
+    if (cloud && typeof cloud === 'object') {
+      let changed = false;
+      Object.keys(cloud).forEach(d => {
+        const item = cloud[d];
+        const docRows = Array.isArray(item) ? item : (item?.rows || null);
+        if (docRows && (!allEmployeeRecords[d] || allEmployeeRecords[d].length === 0)) {
+          allEmployeeRecords[d] = docRows;
+          changed = true;
+        }
+      });
+      if (changed) displayList();
+    }
+  } catch (err) {
+    console.warn("[Audit Archive] Cloud sync notice:", err);
+  }
 };
 
 // ──────────────────────────────────────────────────────────────────────────────
