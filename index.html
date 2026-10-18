@@ -3,38 +3,50 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LV Spices — Employee Personal Hygiene Register</title>
-  <meta name="description" content="LV Spices Employee Personal Hygiene Register — FSSAI compliant daily employee hygiene tracking." />
+  <title>L V Spices — Employee Personal Hygiene Record</title>
+  <meta name="description" content="L V Spices Employee Personal Hygiene Record — FSSAI Schedule 4 GMP Compliance & Daily Employee Hygiene Tracking." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;0,9..40,900&display=swap" rel="stylesheet" />
+  <!-- SheetJS for Excel Exports -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
 
-<!-- TOP BAR (Label Maker style) -->
-<div class="top-bar">
+<!-- TOP BAR (Label Maker Red & Gold Crest style) -->
+<header class="top-bar">
   <div class="top-bar-left">
-    <div class="top-logo-mark">
-      LV<br><sup>SPICES</sup>
+    <div class="top-logo-crest">
+      <svg viewBox="0 0 42 42" fill="none" class="crest-svg">
+        <circle cx="21" cy="21" r="20" fill="#990017" stroke="#D4AF37" stroke-width="1.5"/>
+        <circle cx="21" cy="21" r="17" fill="none" stroke="#D4AF37" stroke-dasharray="2 2" stroke-width="0.8"/>
+        <path d="M21 7L23 13L29 15L23 17L21 23L19 17L13 15L19 13Z" fill="#D4AF37"/>
+        <text x="21" y="31" font-family="'DM Sans', sans-serif" font-size="7" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="0.5">LV SPICES</text>
+      </svg>
     </div>
     <div class="top-divider"></div>
     <div>
-      <div class="top-studio-title">Employee Hygiene Register</div>
-      <div class="top-studio-sub">FSSAI GHP Compliance Record</div>
+      <div class="top-studio-title">Employee Personal Hygiene Record</div>
+      <div class="top-studio-sub">FSSAI Schedule 4 • GMP & GHP Food Safety</div>
     </div>
   </div>
+
   <div class="top-bar-center">
-    <div class="top-tagline">Personal Hygiene — Daily Tracking</div>
+    <div class="top-cloud-pill connected" id="cloud-status-badge">
+      <span class="cloud-dot"></span>
+      <span id="cloud-status-text">Cloud Synced (Firestore)</span>
+    </div>
   </div>
+
   <div class="top-bar-right">
     <div>
       <div class="top-date" id="top-date">—</div>
-      <div class="top-time" id="top-time">—</div>
+      <div class="top-time" id="top-time">Mukesh Vora (QA / Supervisor)</div>
     </div>
-    <div class="top-avatar" id="top-avatar">MV</div>
+    <div class="top-avatar" title="Supervisor: Mukesh Vora">MV</div>
   </div>
-</div>
+</header>
 
 <!-- MAIN LAYOUT -->
 <div class="main-layout">
@@ -42,28 +54,28 @@
   <!-- SIDEBAR -->
   <aside class="sidebar">
     <nav class="side-nav">
-      <a class="side-nav-item active" data-view="monthly" onclick="switchView('monthly')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        Monthly View
-      </a>
-      <a class="side-nav-item" data-view="daily" onclick="switchView('daily')">
+      <a class="side-nav-item active" data-view="daily" onclick="switchView('daily')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-        Daily View
+        Daily Register
+      </a>
+      <a class="side-nav-item" data-view="monthly" onclick="switchView('monthly')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Monthly Matrix
       </a>
       <a class="side-nav-item" data-view="history" onclick="switchView('history')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        History
+        Audit Archive
       </a>
     </nav>
 
     <div class="sidebar-bottom">
       <div class="side-stat">
         <div class="side-stat-num" id="side-employees">11</div>
-        <div class="side-stat-label">Employees</div>
+        <div class="side-stat-label">Active Staff</div>
       </div>
       <div class="side-stat">
-        <div class="side-stat-num" id="side-month-days">—</div>
-        <div class="side-stat-label">Days This Month</div>
+        <div class="side-stat-num" id="side-month-days">October</div>
+        <div class="side-stat-label">Current Cycle</div>
       </div>
     </div>
   </aside>
@@ -82,39 +94,107 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
       </div>
+
       <div class="toolbar-right">
+        <!-- Excel Export Button -->
+        <button class="tb-btn-excel" onclick="openExportModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h8"/><path d="M8 17h8"/></svg>
+          Export Excel (.xlsx)
+        </button>
         <button class="tb-btn-primary" onclick="saveData()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
-          Save
-        </button>
-        <button class="tb-btn-outline" onclick="window.print()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-          Print
+          Save to Cloud
         </button>
       </div>
     </div>
 
-    <!-- MONTHLY VIEW -->
-    <div class="view-area" id="view-monthly">
-      <div class="register-header-block">
-        <div class="register-title">L V SPICES — EMPLOYEE PERSONAL HYGIENE REGISTER</div>
-        <div class="register-meta">
+    <!-- DAILY VIEW (MATCHING CLIENT PDF SHEET EXACTLY) -->
+    <div class="view-area" id="view-daily">
+      
+      <!-- Official Client Sheet Header -->
+      <div class="client-sheet-header">
+        <div class="csh-title">L V SPICES</div>
+        <div class="csh-subtitle">EMPLOYEE PERSONAL HYGIENE RECORD</div>
+        <div class="csh-meta-line">
+          <span>Date: <strong id="daily-meta-date">—</strong></span>
+          <span>Month: <strong id="daily-meta-month">—</strong></span>
+          <span>Year: <strong id="daily-meta-year">2026</strong></span>
+          <span>Department / Area: <strong>Manufacturing & Packaging</strong></span>
+        </div>
+      </div>
+
+      <!-- Quick Metrics -->
+      <div class="stat-pills" id="daily-stat-pills">
+        <div class="pill-card green">
+          <div class="pc-num" id="stat-ok-daily">11</div>
+          <div class="pc-lbl">Employees Cleared (OK)</div>
+        </div>
+        <div class="pill-card red">
+          <div class="pc-num" id="stat-fail-daily">0</div>
+          <div class="pc-lbl">Deficiencies (X)</div>
+        </div>
+        <div class="pill-card gold">
+          <div class="pc-num" id="stat-score-daily">100%</div>
+          <div class="pc-lbl">Hygiene Compliance</div>
+        </div>
+      </div>
+
+      <!-- Table matching image 1 -->
+      <div class="grid-wrap">
+        <table class="daily-table" id="daily-table">
+          <thead>
+            <tr>
+              <th style="width:100px;">Date</th>
+              <th style="min-width:180px;">Employee Name</th>
+              <th class="center" style="width:130px;">Clean Uniform</th>
+              <th class="center" style="width:130px;">Hand Hygiene</th>
+              <th class="center" style="width:130px;">Nails / Hair</th>
+              <th class="center" style="width:130px;">Health Status</th>
+              <th style="min-width:240px;">Corrective Action</th>
+              <th style="width:130px;">Checked By</th>
+            </tr>
+          </thead>
+          <tbody id="daily-body">
+            <!-- Rendered by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Client Sheet Footer Notes -->
+      <div class="client-sheet-footer">
+        <div class="csf-legend">
+          <strong>Mark:</strong> <code>OK</code> = Satisfactory; <code>X</code> = Unsatisfactory; <code>NA</code> = Not Applicable. Record corrective actions and re-check any failures.
+        </div>
+        <div class="csf-sign-row">
+          <div>Supervisor Name / Signature: <span class="signature-text">Mukesh Vora</span></div>
+          <div>Date: <span id="csf-sign-date">—</span></div>
+        </div>
+      </div>
+
+    </div><!-- end view-daily -->
+
+    <!-- MONTHLY VIEW (COMPREHENSIVE 31-DAY MATRIX) -->
+    <div class="view-area" id="view-monthly" style="display:none;">
+      <div class="client-sheet-header">
+        <div class="csh-title">L V SPICES</div>
+        <div class="csh-subtitle">EMPLOYEE PERSONAL HYGIENE REGISTER — MONTHLY MATRIX</div>
+        <div class="csh-meta-line">
           <span>Month: <strong id="rh-month">—</strong></span>
           <span>Checked By: <strong>Mukesh Vora</strong></span>
-          <span>FSSAI Licence No.: XXXXXXXXXX</span>
+          <span>FSSAI License: <strong>11521018000452</strong></span>
         </div>
       </div>
 
       <!-- Stats Row -->
       <div class="stat-pills" id="stat-pills">
-        <!-- rendered by JS -->
+        <!-- Rendered by JS -->
       </div>
 
       <!-- Monthly Grid Table -->
       <div class="grid-wrap">
         <div class="grid-scroll">
           <table class="grid-table" id="monthly-grid">
-            <!-- rendered by JS -->
+            <!-- Rendered by JS -->
           </table>
         </div>
       </div>
@@ -123,7 +203,7 @@
       <div class="issues-block" id="issues-block" style="display:none;">
         <div class="issues-header">
           <svg viewBox="0 0 24 24" fill="none" stroke="#C8001E" stroke-width="2" width="16" height="16"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-          <strong>Issues This Month</strong>
+          <strong>Corrective Action Logs This Month</strong>
         </div>
         <table class="issues-table" id="issues-table">
           <thead>
@@ -138,56 +218,27 @@
           <tbody id="issues-body"></tbody>
         </table>
       </div>
-    </div>
-
-    <!-- DAILY VIEW -->
-    <div class="view-area" id="view-daily" style="display:none;">
-      <div class="register-header-block">
-        <div class="register-title">DAILY HYGIENE CHECK — <span id="daily-date-title">—</span></div>
-        <div class="register-meta">
-          <span>Checked By: <strong>Mukesh Vora</strong></span>
-        </div>
-      </div>
-      <div class="daily-date-nav">
-        <button class="tb-btn" onclick="changeDay(-1)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="15 18 9 12 15 6"/></svg>
-        </button>
-        <span class="period-display" id="daily-date-display">—</span>
-        <button class="tb-btn" onclick="changeDay(1)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="9 18 15 12 9 6"/></svg>
-        </button>
-      </div>
-      <div class="grid-wrap">
-        <table class="daily-table" id="daily-table">
-          <thead>
-            <tr>
-              <th style="width:36px">Sr.</th>
-              <th>Employee Name</th>
-              <th class="center">Clean Uniform</th>
-              <th class="center">Hand Hygiene</th>
-              <th class="center">Nails / Hair</th>
-              <th class="center">Health Status</th>
-              <th>Corrective Action</th>
-              <th style="width:110px">Checked By</th>
-            </tr>
-          </thead>
-          <tbody id="daily-body"></tbody>
-        </table>
-      </div>
-    </div>
+    </div><!-- end view-monthly -->
 
     <!-- HISTORY VIEW -->
     <div class="view-area" id="view-history" style="display:none;">
-      <div class="register-header-block">
-        <div class="register-title">HISTORY — PAST RECORDS</div>
+      <div class="client-sheet-header">
+        <div class="csh-title">L V SPICES</div>
+        <div class="csh-subtitle">AUDIT ARCHIVE — PAST MONTHS & HISTORICAL LOGS</div>
       </div>
       <div class="history-filters-row">
         <select class="h-select" id="hist-month-sel" onchange="renderHistoryList()">
-          <!-- months -->
+          <option value="10">October</option>
+          <option value="9">September</option>
+          <option value="8">August</option>
+          <option value="11">November</option>
+          <option value="12">December</option>
         </select>
         <select class="h-select" id="hist-year-sel" onchange="renderHistoryList()">
-          <!-- years -->
+          <option value="2026">2026</option>
+          <option value="2025">2025</option>
         </select>
+        <button class="tb-btn-excel" onclick="exportReport('monthly')">Download Month Report (.xlsx)</button>
       </div>
       <div id="history-list-container"></div>
     </div>
@@ -195,9 +246,77 @@
   </div><!-- end content-wrap -->
 </div><!-- end main-layout -->
 
+<!-- EXCEL EXPORT MODAL -->
+<div class="modal-backdrop" id="export-modal" style="display:none;" onclick="closeExportModal()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title-with-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#C8001E" stroke-width="2" width="22" height="22"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h8"/><path d="M8 17h8"/></svg>
+        <h3>Download Employee Hygiene Report (.xlsx)</h3>
+      </div>
+      <button class="modal-close" onclick="closeExportModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:#64748B; font-size:13px; margin-bottom:16px;">Download official FSSAI Schedule 4 formatted employee personal hygiene records.</p>
+      
+      <div class="export-options-grid">
+        <button class="export-option-card" onclick="exportReport('daily')">
+          <div class="eoc-icon">📅</div>
+          <div class="eoc-content">
+            <strong>Today's Daily Record</strong>
+            <span>Active date register for all 11 employees matching client sheet</span>
+          </div>
+          <div class="eoc-arrow">→</div>
+        </button>
+
+        <button class="export-option-card" onclick="exportReport('weekly')">
+          <div class="eoc-icon">📆</div>
+          <div class="eoc-content">
+            <strong>Weekly Hygiene Summary</strong>
+            <span>Monday to Sunday daily entries with corrective action log</span>
+          </div>
+          <div class="eoc-arrow">→</div>
+        </button>
+
+        <button class="export-option-card" onclick="exportReport('october')">
+          <div class="eoc-icon">📊</div>
+          <div class="eoc-content">
+            <strong>October 2026 Full Register</strong>
+            <span>Complete month records for all 11 employees across all days</span>
+          </div>
+          <div class="eoc-arrow">→</div>
+        </button>
+
+        <button class="export-option-card" onclick="exportReport('all')">
+          <div class="eoc-icon">🗄️</div>
+          <div class="eoc-content">
+            <strong>All Records (Complete Archive)</strong>
+            <span>All historical logs stored in Cloud Firestore</span>
+          </div>
+          <div class="eoc-arrow">→</div>
+        </button>
+      </div>
+
+      <div class="custom-range-box">
+        <div style="font-weight:600; font-size:13px; margin-bottom:8px;">Custom Date Range:</div>
+        <div class="range-inputs">
+          <input type="date" id="export-from-date" class="form-input-sm" />
+          <span>to</span>
+          <input type="date" id="export-to-date" class="form-input-sm" />
+          <button class="tb-btn-excel" style="padding:6px 12px; font-size:12px;" onclick="exportReport('custom')">Download Range</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="tb-btn" onclick="closeExportModal()">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div class="toast-stack" id="toast-stack"></div>
 
+<script type="module" src="js/firebase-config.js"></script>
 <script type="module" src="js/app.js"></script>
 </body>
 </html>

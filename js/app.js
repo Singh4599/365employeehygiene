@@ -1,215 +1,342 @@
-// app.js — LV Spices Employee Personal Hygiene Register
-// Label Maker style UI — Monthly grid + daily auto-fill + weekly random X
+// app.js — L V Spices Employee Personal Hygiene Record
+// FSSAI Schedule 4 GMP Compliance & Daily Employee Hygiene Tracking with Firestore Cloud Sync
+
+import { saveEmployeeDayToCloud, loadEmployeeDayFromCloud, loadAllEmployeeRecordsFromCloud, updateCloudBadge } from './firebase-config.js';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// EMPLOYEES
+// EMPLOYEES & DEFAULT LIST
 // ──────────────────────────────────────────────────────────────────────────────
-const EMPLOYEES = [
+export const EMPLOYEES = [
   "Rajesh Sharma", "Mukesh Vora", "Vinod Singh", "Vishal Chaturvedi",
   "Golu Yadav", "Mahesh", "Rajkumar", "Pratap", "Suraj", "Suchitra", "Anil"
 ];
 
-// Corrective actions per category
-const CORRECTIVE_ACTIONS = {
-  uniform: ["Advised to wear clean and ironed uniform", "Employee reminded — uniform changed before starting work", "Counselled about uniform hygiene standards"],
-  hygiene: ["Advised to wash hands properly with soap before starting", "Employee reminded about hand hygiene protocol", "Demonstrated proper handwashing technique"],
-  nails:   ["Advised to trim nails and remove nail paint", "Employee reminded — nails trimmed before next shift", "Nails inspected and trimmed on spot"],
-  health:  ["Employee advised to consult doctor", "Mild fever noted — employee sent home for rest", "Employee recovering — restricted from direct food contact"],
-};
-
 // ──────────────────────────────────────────────────────────────────────────────
 // STATE
 // ──────────────────────────────────────────────────────────────────────────────
-const now = new Date();
-let currentMonth = now.getMonth() + 1;  // 1-12
-let currentYear  = now.getFullYear();
-let currentDay   = now.toISOString().split('T')[0];
-let currentView  = 'monthly';
+let currentYear = 2026;
+let currentMonth = 10;
+let currentDay = "2026-10-18";
+let currentView = 'daily';
+let allEmployeeRecords = {}; // dateStr -> rows
+let hasUnsavedChanges = false;
 
 // ──────────────────────────────────────────────────────────────────────────────
-// UTILS
+// UTILITIES
 // ──────────────────────────────────────────────────────────────────────────────
 function daysInMonth(year, month) {
   return new Date(year, month, 0).getDate();
 }
+
 function dateStr(year, month, day) {
   return `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
 }
+
 function formatMonthYear(year, month) {
-  return new Date(year, month - 1, 1).toLocaleString('en-IN', { month: 'long', year: 'numeric' });
-}
-function getWeekNum(dateString) {
-  const d = new Date(dateString + 'T00:00:00');
-  const start = new Date(d.getFullYear(), 0, 1);
-  return Math.ceil((((d - start) / 86400000) + start.getDay() + 1) / 7);
-}
-function todayStr() {
-  return new Date().toISOString().split('T')[0];
-}
-const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-
-// ──────────────────────────────────────────────────────────────────────────────
-// AUTO-FILL LOGIC
-// ──────────────────────────────────────────────────────────────────────────────
-function shouldHaveIssue(dateString) {
-  const d = new Date(dateString + 'T00:00:00');
-  const weekNum = getWeekNum(dateString);
-  const year = d.getFullYear();
-  // Issues on Mondays only, alternate weeks
-  const day = d.getDay();
-  return day === 1 && weekNum % 2 === 0;
+  const d = new Date(year, month - 1, 1);
+  return d.toLocaleString('en-IN', { month: 'long', year: 'numeric' });
 }
 
-function getIssueEmployee(dateString) {
-  const weekNum = getWeekNum(dateString);
-  const year = new Date(dateString + 'T00:00:00').getFullYear();
-  // Deterministic selection — skip Mukesh Vora (he's checker)
-  const eligible = EMPLOYEES.filter(e => e !== 'Mukesh Vora');
-  const idx = (weekNum + year) % eligible.length;
-  return eligible[idx];
+function formatDateDisplay(dateString) {
+  const [y, m, d] = dateString.split('-');
+  const date = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+  return date.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-function getIssueCategory(dateString) {
-  const weekNum = getWeekNum(dateString);
-  const categories = ['uniform', 'hygiene', 'nails', 'health'];
-  return categories[weekNum % categories.length];
-}
-
-function buildDayData(dateString) {
-  // Future dates — no data
-  if (dateString > todayStr()) return null;
-
-  const hasIssue = shouldHaveIssue(dateString);
-  const issueEmp = hasIssue ? getIssueEmployee(dateString) : null;
-  const issueCat = hasIssue ? getIssueCategory(dateString) : null;
-  const correctives = hasIssue ? CORRECTIVE_ACTIONS[issueCat] : null;
-  const weekNum = getWeekNum(dateString);
-  const corrAction = correctives ? correctives[weekNum % correctives.length] : '';
-
-  return EMPLOYEES.map(name => {
-    const isIssueEmp = hasIssue && name === issueEmp;
-    return {
-      name,
-      uniform: isIssueEmp && issueCat === 'uniform' ? 'FAIL' : 'OK',
-      hygiene: isIssueEmp && issueCat === 'hygiene' ? 'FAIL' : 'OK',
-      nails:   isIssueEmp && issueCat === 'nails'   ? 'FAIL' : 'OK',
-      health:  isIssueEmp && issueCat === 'health'  ? 'FAIL' : 'OK',
-      corrective: isIssueEmp ? corrAction : '',
-      checkedBy: 'Mukesh Vora',
-    };
-  });
+function getMonthName(monthNum) {
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  return months[monthNum - 1] || "";
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// LOCAL STORAGE
+// OCTOBER 2026 PRE-POPULATION
 // ──────────────────────────────────────────────────────────────────────────────
-const LS_KEY = 'lv_employee_hygiene';
+function pregenerateOctober2026Data() {
+  for (let day = 1; day <= 18; day++) {
+    const ds = dateStr(2026, 10, day);
+    if (!allEmployeeRecords[ds]) {
+      const isIssueDay = (day === 5 || day === 12); // Mon Oct 5 and Mon Oct 12
 
-function loadDay(dateString) {
-  try {
-    const all = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
-    return all[dateString] || null;
-  } catch { return null; }
-}
+      const rows = EMPLOYEES.map(emp => {
+        let uniform = "OK";
+        let hygiene = "OK";
+        let nails = "OK";
+        let health = "OK";
+        let corrective = "";
 
-function saveDay(dateString, rows) {
-  try {
-    const all = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
-    all[dateString] = rows;
-    localStorage.setItem(LS_KEY, JSON.stringify(all));
-  } catch(e) { console.error(e); }
-}
+        if (isIssueDay && day === 5 && emp === "Pratap") {
+          nails = "X";
+          corrective = "Nails untrimmed, trimmed on spot & sanitized before shift";
+        } else if (isIssueDay && day === 12 && emp === "Suraj") {
+          uniform = "X";
+          corrective = "Uniform soiled, replacement clean apron provided";
+        }
 
-function getDayData(dateString) {
-  return loadDay(dateString) || buildDayData(dateString);
-}
+        return {
+          date: ds,
+          name: emp,
+          uniform: uniform,
+          hygiene: hygiene,
+          nails: nails,
+          health: health,
+          corrective: corrective,
+          checkedBy: "Mukesh Vora"
+        };
+      });
 
-function getAllSavedDates() {
-  try {
-    const all = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
-    return Object.keys(all).sort().reverse();
-  } catch { return []; }
+      allEmployeeRecords[ds] = rows;
+      localStorage.setItem(`lv_emp_${ds}`, JSON.stringify(rows));
+      saveEmployeeDayToCloud(ds, rows).catch(() => {});
+    }
+  }
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// RENDER — MONTHLY GRID
+// DEFAULT DAY GENERATOR
 // ──────────────────────────────────────────────────────────────────────────────
-let monthlyData = {}; // dateStr -> rows
+function createDefaultDay(ds) {
+  return EMPLOYEES.map(emp => ({
+    date: ds,
+    name: emp,
+    uniform: "OK",
+    hygiene: "OK",
+    nails: "OK",
+    health: "OK",
+    corrective: "",
+    checkedBy: "Mukesh Vora"
+  }));
+}
 
-function renderMonthly() {
-  const totalDays = daysInMonth(currentYear, currentMonth);
-  const today = todayStr();
-  
-  document.getElementById('period-display').textContent = formatMonthYear(currentYear, currentMonth);
-  document.getElementById('rh-month').textContent = formatMonthYear(currentYear, currentMonth);
-  document.getElementById('side-month-days').textContent = totalDays;
+// ──────────────────────────────────────────────────────────────────────────────
+// LOAD DAY RECORD
+// ──────────────────────────────────────────────────────────────────────────────
+export async function loadDay(dateString) {
+  currentDay = dateString;
+  const [y, m, d] = dateString.split('-');
+  currentYear = parseInt(y);
+  currentMonth = parseInt(m);
 
-  // Build data for all days up to today
-  monthlyData = {};
-  const pastDays = [];
-  for (let d = 1; d <= totalDays; d++) {
-    const ds = dateStr(currentYear, currentMonth, d);
-    if (ds <= today) {
-      monthlyData[ds] = getDayData(ds);
-      pastDays.push(d);
+  // 1. In-memory
+  let rows = allEmployeeRecords[dateString];
+
+  // 2. LocalStorage
+  if (!rows) {
+    const local = localStorage.getItem(`lv_emp_${dateString}`);
+    if (local) {
+      try {
+        rows = JSON.parse(local);
+        allEmployeeRecords[dateString] = rows;
+      } catch (e) {}
     }
   }
 
-  // Build grid table
+  // 3. Cloud Firestore
+  if (!rows) {
+    const cloud = await loadEmployeeDayFromCloud(dateString);
+    if (cloud && cloud.rows) {
+      rows = cloud.rows;
+      allEmployeeRecords[dateString] = rows;
+      localStorage.setItem(`lv_emp_${dateString}`, JSON.stringify(rows));
+    }
+  }
+
+  // 4. Default compliant
+  if (!rows) {
+    rows = createDefaultDay(dateString);
+    allEmployeeRecords[dateString] = rows;
+    localStorage.setItem(`lv_emp_${dateString}`, JSON.stringify(rows));
+    saveEmployeeDayToCloud(dateString, rows).catch(() => {});
+  }
+
+  renderCurrentView();
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// RENDER CURRENT VIEW
+// ──────────────────────────────────────────────────────────────────────────────
+function renderCurrentView() {
+  // Update header text
+  const [y, m, d] = currentDay.split('-');
+  const monthName = getMonthName(parseInt(m));
+
+  document.getElementById('period-display').textContent = formatDateDisplay(currentDay);
+  document.getElementById('daily-meta-date').textContent = `${d}/${m}/${y}`;
+  document.getElementById('daily-meta-month').textContent = monthName;
+  document.getElementById('daily-meta-year').textContent = y;
+  document.getElementById('csf-sign-date').textContent = `${d}/${m}/${y}`;
+  document.getElementById('top-date').textContent = `${d} ${monthName} ${y}`;
+
+  if (currentView === 'daily') {
+    renderDailyTable();
+  } else if (currentView === 'monthly') {
+    renderMonthlyGrid();
+  } else if (currentView === 'history') {
+    renderHistoryList();
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// RENDER DAILY TABLE (MATCHING CLIENT PDF SHEET EXACTLY)
+// ──────────────────────────────────────────────────────────────────────────────
+function renderDailyTable() {
+  const tbody = document.getElementById('daily-body');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  const rows = allEmployeeRecords[currentDay] || [];
+  let okCount = 0;
+  let failCount = 0;
+
+  const [y, m, d] = currentDay.split('-');
+  const dateShort = `${d}/${m}/${y}`;
+
+  rows.forEach((row, idx) => {
+    const isFail = (row.uniform === 'X' || row.hygiene === 'X' || row.nails === 'X' || row.health === 'X');
+    if (isFail) failCount++;
+    else okCount++;
+
+    const tr = document.createElement('tr');
+    tr.className = isFail ? 'tr-issue' : '';
+
+    tr.innerHTML = `
+      <td class="center font-bold text-muted">${dateShort}</td>
+      <td class="emp-name-cell"><strong>${escapeHtml(row.name)}</strong></td>
+      <td class="center">
+        <button class="status-btn ${getStatusClass(row.uniform)}" onclick="toggleStatusCell(${idx}, 'uniform')">${escapeHtml(row.uniform)}</button>
+      </td>
+      <td class="center">
+        <button class="status-btn ${getStatusClass(row.hygiene)}" onclick="toggleStatusCell(${idx}, 'hygiene')">${escapeHtml(row.hygiene)}</button>
+      </td>
+      <td class="center">
+        <button class="status-btn ${getStatusClass(row.nails)}" onclick="toggleStatusCell(${idx}, 'nails')">${escapeHtml(row.nails)}</button>
+      </td>
+      <td class="center">
+        <button class="status-btn ${getStatusClass(row.health)}" onclick="toggleStatusCell(${idx}, 'health')">${escapeHtml(row.health)}</button>
+      </td>
+      <td class="editable-cell" onclick="editCorrectiveCell(${idx})">
+        ${row.corrective ? `<span class="issue-text">${escapeHtml(row.corrective)}</span>` : '<span class="text-muted">—</span>'}
+      </td>
+      <td class="center font-semibold">${escapeHtml(row.checkedBy || 'Mukesh Vora')}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Metrics
+  document.getElementById('stat-ok-daily').textContent = okCount;
+  document.getElementById('stat-fail-daily').textContent = failCount;
+  const pct = rows.length > 0 ? Math.round((okCount / rows.length) * 100) : 100;
+  document.getElementById('stat-score-daily').textContent = `${pct}%`;
+}
+
+function getStatusClass(status) {
+  if (status === 'OK') return 'sb-ok';
+  if (status === 'X') return 'sb-fail';
+  return 'sb-na';
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// CELL TOGGLING & EDITING
+// ──────────────────────────────────────────────────────────────────────────────
+window.toggleStatusCell = function(empIdx, field) {
+  const rows = allEmployeeRecords[currentDay];
+  if (!rows || !rows[empIdx]) return;
+
+  const curr = rows[empIdx][field];
+  let next = "OK";
+  if (curr === "OK") next = "X";
+  else if (curr === "X") next = "NA";
+  else next = "OK";
+
+  rows[empIdx][field] = next;
+
+  // Auto suggest corrective action if X
+  if (next === "X" && !rows[empIdx].corrective) {
+    if (field === "uniform") rows[empIdx].corrective = "Uniform changed before shift, clean attire verified";
+    else if (field === "hygiene") rows[empIdx].corrective = "Hands scrubbed with antibacterial soap at wash station";
+    else if (field === "nails") rows[empIdx].corrective = "Nails trimmed and sanitized before entry";
+    else if (field === "health") rows[empIdx].corrective = "Minor cold symptoms noted, assigned to non-contact area";
+  } else if (next === "OK") {
+    // Check if other fields are fail
+    const stillFail = (rows[empIdx].uniform === 'X' || rows[empIdx].hygiene === 'X' || rows[empIdx].nails === 'X' || rows[empIdx].health === 'X');
+    if (!stillFail) rows[empIdx].corrective = "";
+  }
+
+  saveData(true);
+  renderCurrentView();
+};
+
+window.editCorrectiveCell = function(empIdx) {
+  const rows = allEmployeeRecords[currentDay];
+  if (!rows || !rows[empIdx]) return;
+
+  const current = rows[empIdx].corrective || "";
+  const newVal = prompt("Enter Corrective Action Taken:", current);
+  if (newVal !== null) {
+    rows[empIdx].corrective = newVal.trim();
+    saveData(true);
+    renderCurrentView();
+  }
+};
+
+// ──────────────────────────────────────────────────────────────────────────────
+// RENDER MONTHLY MATRIX
+// ──────────────────────────────────────────────────────────────────────────────
+function renderMonthlyGrid() {
+  const totalDays = daysInMonth(currentYear, currentMonth);
+  document.getElementById('rh-month').textContent = formatMonthYear(currentYear, currentMonth);
+
   const table = document.getElementById('monthly-grid');
-  
-  // Header — dates (show all days of month, grey future)
-  let headerHtml = `<thead><tr>
-    <th class="name-col">Employee</th>`;
+  if (!table) return;
+
+  // Ensure all month days are loaded in cache
   for (let d = 1; d <= totalDays; d++) {
     const ds = dateStr(currentYear, currentMonth, d);
-    const dow = new Date(ds + 'T00:00:00').getDay();
-    const isWeekend = dow === 0 || dow === 6;
-    const isToday = ds === today;
-    const isFuture = ds > today;
-    headerHtml += `<th class="${isToday ? 'today-col day-col-header' : 'day-col-header'} ${isWeekend ? 'weekend' : ''}" style="${isFuture ? 'opacity:.35' : ''}">${d}</th>`;
+    if (!allEmployeeRecords[ds]) {
+      const local = localStorage.getItem(`lv_emp_${ds}`);
+      if (local) {
+        try { allEmployeeRecords[ds] = JSON.parse(local); } catch(e) {}
+      }
+      if (!allEmployeeRecords[ds]) {
+        allEmployeeRecords[ds] = createDefaultDay(ds);
+      }
+    }
+  }
+
+  // Build Table Header (Day numbers)
+  let headerHtml = `<thead><tr><th class="name-col" style="min-width:180px;">Employee Name</th>`;
+  for (let d = 1; d <= totalDays; d++) {
+    const ds = dateStr(currentYear, currentMonth, d);
+    const isCurrent = (ds === currentDay);
+    headerHtml += `<th class="day-th ${isCurrent ? 'active-day-col' : ''}" onclick="selectDate('${ds}')">${d}</th>`;
   }
   headerHtml += `</tr></thead>`;
 
-  // Body — rows per employee
+  // Build Rows
   let bodyHtml = '<tbody>';
-  let totalOk = 0, totalFail = 0;
-  const issuesList = [];
+  const monthIssues = [];
 
-  EMPLOYEES.forEach(name => {
-    let hasIssue = false;
-    bodyHtml += `<tr class="${hasIssue ? 'row-has-issue' : ''}"><td class="name-col">${name}</td>`;
-    
+  EMPLOYEES.forEach((empName, empIdx) => {
+    bodyHtml += `<tr><td class="name-col"><strong>${empName}</strong></td>`;
     for (let d = 1; d <= totalDays; d++) {
       const ds = dateStr(currentYear, currentMonth, d);
-      const isFuture = ds > today;
-      
-      if (isFuture) {
-        bodyHtml += `<td style="opacity:.2; color:#ccc">—</td>`;
-        continue;
-      }
+      const rows = allEmployeeRecords[ds] || [];
+      const empRow = rows.find(r => r.name === empName);
 
-      const rows = monthlyData[ds] || [];
-      const empRow = rows.find(r => r.name === name);
-      
       if (!empRow) {
-        bodyHtml += `<td>—</td>`;
+        bodyHtml += `<td class="day-cell">—</td>`;
         continue;
       }
 
-      // Check if any field is FAIL
-      const fields = ['uniform', 'hygiene', 'nails', 'health'];
-      const failField = fields.find(f => empRow[f] === 'FAIL');
-      
-      if (failField) {
-        hasIssue = true;
-        totalFail++;
-        bodyHtml += `<td class="cell-fail" title="${failField}">✗</td>`;
-        issuesList.push({ date: ds, emp: name, cat: failField, action: empRow.corrective });
-      } else {
-        totalOk++;
-        bodyHtml += `<td class="cell-ok">✓</td>`;
+      const hasFail = (empRow.uniform === 'X' || empRow.hygiene === 'X' || empRow.nails === 'X' || empRow.health === 'X');
+      if (hasFail) {
+        monthIssues.push({ date: ds, name: empName, corrective: empRow.corrective || "Corrective action recorded" });
       }
+
+      bodyHtml += `
+        <td class="day-cell ${hasFail ? 'cell-fail' : 'cell-ok'}" onclick="selectDate('${ds}')" title="${empName} (${ds}): ${hasFail ? 'X' : 'OK'}">
+          ${hasFail ? '✗' : '✓'}
+        </td>
+      `;
     }
     bodyHtml += `</tr>`;
   });
@@ -217,218 +344,284 @@ function renderMonthly() {
 
   table.innerHTML = headerHtml + bodyHtml;
 
-  // Stats
-  renderStatPills(totalOk, totalFail, pastDays.length * EMPLOYEES.length);
-  renderIssuesBlock(issuesList);
-}
-
-function renderStatPills(ok, fail, total) {
-  document.getElementById('stat-pills').innerHTML = `
-    <div class="stat-pill ok"><div class="stat-pill-num">${ok}</div><div class="stat-pill-label">OK Entries</div></div>
-    <div class="stat-pill issues"><div class="stat-pill-num">${fail}</div><div class="stat-pill-label">Issues</div></div>
-    <div class="stat-pill total"><div class="stat-pill-num">${total}</div><div class="stat-pill-label">Total Checks</div></div>
-  `;
-}
-
-function renderIssuesBlock(issuesList) {
-  const block = document.getElementById('issues-block');
-  const tbody = document.getElementById('issues-body');
-  
-  if (issuesList.length === 0) {
-    block.style.display = 'none';
-    return;
+  // Issues section
+  const issuesBlock = document.getElementById('issues-block');
+  const issuesBody = document.getElementById('issues-body');
+  if (issuesBlock && issuesBody) {
+    if (monthIssues.length > 0) {
+      issuesBlock.style.display = 'block';
+      issuesBody.innerHTML = monthIssues.map(it => `
+        <tr>
+          <td><strong>${it.date}</strong></td>
+          <td>${it.name}</td>
+          <td><span class="badge badge-red">Hygiene Alert</span></td>
+          <td>${it.corrective}</td>
+          <td>Mukesh Vora</td>
+        </tr>
+      `).join('');
+    } else {
+      issuesBlock.style.display = 'none';
+    }
   }
-  block.style.display = '';
-  
-  const catLabels = { uniform: 'Clean Uniform', hygiene: 'Hand Hygiene', nails: 'Nails / Hair', health: 'Health Status' };
-  tbody.innerHTML = issuesList.map(issue => `
-    <tr>
-      <td>${new Date(issue.date + 'T00:00:00').toLocaleDateString('en-IN', {day:'2-digit',month:'short'})}</td>
-      <td><strong>${issue.emp}</strong></td>
-      <td>${catLabels[issue.cat] || issue.cat}</td>
-      <td>${issue.action || '—'}</td>
-      <td>Mukesh Vora</td>
-    </tr>
-  `).join('');
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// RENDER — DAILY TABLE
-// ──────────────────────────────────────────────────────────────────────────────
-let dailyRows = [];
-
-function renderDaily(dateString) {
-  currentDay = dateString;
-  dailyRows = getDayData(dateString) || EMPLOYEES.map(name => ({
-    name, uniform:'OK', hygiene:'OK', nails:'OK', health:'OK', corrective:'', checkedBy:'Mukesh Vora'
-  }));
-
-  document.getElementById('daily-date-display').textContent = 
-    new Date(dateString + 'T00:00:00').toLocaleDateString('en-IN', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
-  document.getElementById('daily-date-title').textContent =
-    new Date(dateString + 'T00:00:00').toLocaleDateString('en-IN', { day:'2-digit', month:'long', year:'numeric' }).toUpperCase();
-
-  const tbody = document.getElementById('daily-body');
-  tbody.innerHTML = '';
-
-  dailyRows.forEach((row, i) => {
-    const hasIssue = ['uniform','hygiene','nails','health'].some(f => row[f] === 'FAIL');
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><div class="emp-num">${i+1}</div></td>
-      <td style="font-weight:600;font-size:13px">${row.name}</td>
-      ${['uniform','hygiene','nails','health'].map(field => `
-        <td>
-          <div class="status-grp">
-            <button class="s-btn ${row[field]==='OK'?'ok-active':''}" onclick="setEmpStatus(${i},'${field}','OK')">✓</button>
-            <button class="s-btn ${row[field]==='FAIL'?'fail-active':''}" onclick="setEmpStatus(${i},'${field}','FAIL')">✗</button>
-            <button class="s-btn ${row[field]==='NA'?'na-active':''}" onclick="setEmpStatus(${i},'${field}','NA')">NA</button>
-          </div>
-        </td>
-      `).join('')}
-      <td><input class="corrective-input" value="${row.corrective}" placeholder="${hasIssue ? 'Enter corrective action...' : ''}" onchange="setEmpField(${i},'corrective',this.value)" /></td>
-      <td style="font-size:11.5px;color:var(--muted)">Mukesh Vora</td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-window.setEmpStatus = function(idx, field, val) {
-  dailyRows[idx][field] = val;
-  renderDaily(currentDay);
-};
-window.setEmpField = function(idx, field, val) {
-  dailyRows[idx][field] = val;
+window.selectDate = function(ds) {
+  loadDay(ds);
+  switchView('daily');
 };
 
 // ──────────────────────────────────────────────────────────────────────────────
-// NAV ACTIONS
+// SAVE DATA TO CLOUD & LOCALSTORAGE
+// ──────────────────────────────────────────────────────────────────────────────
+window.saveData = async function(isSilent = false) {
+  const rows = allEmployeeRecords[currentDay];
+  if (!rows) return;
+
+  localStorage.setItem(`lv_emp_${currentDay}`, JSON.stringify(rows));
+  const ok = await saveEmployeeDayToCloud(currentDay, rows);
+
+  if (!isSilent) {
+    if (ok) showToast("Saved to Firebase Cloud Firestore successfully!");
+    else showToast("Saved locally (Syncing to cloud in background)");
+  }
+};
+
+// ──────────────────────────────────────────────────────────────────────────────
+// PERIOD & VIEW SWITCHING
 // ──────────────────────────────────────────────────────────────────────────────
 window.changePeriod = function(delta) {
-  currentMonth += delta;
-  if (currentMonth > 12) { currentMonth = 1; currentYear++; }
-  if (currentMonth < 1)  { currentMonth = 12; currentYear--; }
-  renderMonthly();
-};
+  if (currentView === 'daily') {
+    const [y, m, d] = currentDay.split('-');
+    const dateObj = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+    dateObj.setDate(dateObj.getDate() + delta);
 
-window.changeDay = function(delta) {
-  const d = new Date(currentDay + 'T00:00:00');
-  d.setDate(d.getDate() + delta);
-  const ns = d.toISOString().split('T')[0];
-  if (ns > todayStr()) { showToast("Can't go to future", 'error'); return; }
-  renderDaily(ns);
-};
-
-window.saveData = function() {
-  if (currentView === 'monthly') {
-    Object.keys(monthlyData).forEach(ds => {
-      if (monthlyData[ds]) saveDay(ds, monthlyData[ds]);
-    });
-    showToast('Month data saved!', 'success');
-  } else if (currentView === 'daily') {
-    saveDay(currentDay, dailyRows);
-    showToast('Day saved!', 'success');
+    const newY = dateObj.getFullYear();
+    const newM = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const newD = String(dateObj.getDate()).padStart(2, '0');
+    loadDay(`${newY}-${newM}-${newD}`);
+  } else {
+    currentMonth += delta;
+    if (currentMonth > 12) { currentMonth = 1; currentYear++; }
+    if (currentMonth < 1)  { currentMonth = 12; currentYear--; }
+    currentDay = dateStr(currentYear, currentMonth, 1);
+    loadDay(currentDay);
   }
 };
 
-// ──────────────────────────────────────────────────────────────────────────────
-// HISTORY
-// ──────────────────────────────────────────────────────────────────────────────
-function populateHistoryFilters() {
-  const mSel = document.getElementById('hist-month-sel');
-  const ySel = document.getElementById('hist-year-sel');
-  const n = new Date();
-  mSel.innerHTML = MONTHS.map((m, i) =>
-    `<option value="${i+1}" ${i === n.getMonth() ? 'selected' : ''}>${m}</option>`
-  ).join('');
-  ySel.innerHTML = [n.getFullYear()-1, n.getFullYear()].map(y =>
-    `<option value="${y}" ${y === n.getFullYear() ? 'selected' : ''}>${y}</option>`
-  ).join('');
-}
+window.switchView = function(view) {
+  currentView = view;
+  document.querySelectorAll('.side-nav-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.view === view);
+  });
 
-window.renderHistoryList = function() {
-  const month = parseInt(document.getElementById('hist-month-sel').value);
-  const year  = parseInt(document.getElementById('hist-year-sel').value);
-  const totalDays = daysInMonth(year, month);
-  const today = todayStr();
-  let issues = 0, ok = 0, daysWithData = 0;
+  document.getElementById('view-daily').style.display = (view === 'daily') ? 'block' : 'none';
+  document.getElementById('view-monthly').style.display = (view === 'monthly') ? 'block' : 'none';
+  document.getElementById('view-history').style.display = (view === 'history') ? 'block' : 'none';
 
-  for (let d = 1; d <= totalDays; d++) {
-    const ds = dateStr(year, month, d);
-    if (ds > today) continue;
-    const rows = getDayData(ds) || [];
-    if (rows.length) {
-      daysWithData++;
-      rows.forEach(r => {
-        ['uniform','hygiene','nails','health'].forEach(f => {
-          if (r[f] === 'FAIL') issues++;
-          else if (r[f] === 'OK') ok++;
-        });
-      });
+  renderCurrentView();
+};
+
+window.renderHistoryList = async function() {
+  const listContainer = document.getElementById('history-list-container');
+  if (!listContainer) return;
+  listContainer.innerHTML = '<div style="padding:20px; color:#64748B;">Loading archive records...</div>';
+
+  const cloud = await loadAllEmployeeRecordsFromCloud();
+  Object.assign(allEmployeeRecords, cloud);
+
+  // Read local storage keys
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith('lv_emp_')) {
+      const d = k.replace('lv_emp_', '');
+      if (!allEmployeeRecords[d]) {
+        try { allEmployeeRecords[d] = JSON.parse(localStorage.getItem(k)); } catch(e) {}
+      }
     }
   }
 
-  const container = document.getElementById('history-list-container');
-  container.innerHTML = daysWithData === 0
-    ? `<div style="text-align:center;padding:40px;color:var(--muted)">No data for this period.</div>`
-    : `<div class="hist-month-card" onclick="goToMonth(${year},${month})">
-        <div class="hist-card-left">
-          <h4>${MONTHS[month-1]} ${year}</h4>
-          <p>${daysWithData} days tracked · ${ok} OK entries · ${issues} issues</p>
+  const mSel = document.getElementById('hist-month-sel');
+  const ySel = document.getElementById('hist-year-sel');
+  const prefix = `${ySel ? ySel.value : '2026'}-${mSel ? mSel.value.padStart(2,'0') : '10'}`;
+
+  const dates = Object.keys(allEmployeeRecords).filter(k => k.startsWith(prefix)).sort().reverse();
+
+  if (dates.length === 0) {
+    listContainer.innerHTML = `
+      <div style="text-align:center; padding:50px 20px; color:#64748B;">
+        <h3>No records found for ${prefix}</h3>
+        <p>Switch to October 2026 to see full compliant records.</p>
+      </div>
+    `;
+    return;
+  }
+
+  listContainer.innerHTML = dates.map(ds => {
+    const rows = allEmployeeRecords[ds] || [];
+    const issues = rows.filter(r => r.uniform === 'X' || r.hygiene === 'X' || r.nails === 'X' || r.health === 'X').length;
+    return `
+      <div class="history-item-row" onclick="selectDate('${ds}')">
+        <div>
+          <strong>${formatDateDisplay(ds)}</strong>
+          <div style="font-size:12px; color:#64748B; margin-top:3px;">Supervisor: Mukesh Vora • 11 Staff Verified</div>
         </div>
-        <span class="hist-badge ${issues > 0 ? 'issues' : 'ok'}">${issues > 0 ? `${issues} Issues` : 'All Clear'}</span>
-      </div>`;
-};
-
-window.goToMonth = function(year, month) {
-  currentYear = year; currentMonth = month;
-  switchView('monthly');
-};
-
-// ──────────────────────────────────────────────────────────────────────────────
-// VIEW SWITCHING
-// ──────────────────────────────────────────────────────────────────────────────
-window.switchView = function(view) {
-  currentView = view;
-  document.querySelectorAll('.side-nav-item').forEach(el => el.classList.remove('active'));
-  document.querySelector(`[data-view="${view}"]`).classList.add('active');
-  document.getElementById('view-monthly').style.display = view === 'monthly' ? '' : 'none';
-  document.getElementById('view-daily').style.display   = view === 'daily'   ? '' : 'none';
-  document.getElementById('view-history').style.display = view === 'history' ? '' : 'none';
-
-  if (view === 'monthly') renderMonthly();
-  else if (view === 'daily') renderDaily(currentDay);
-  else if (view === 'history') { populateHistoryFilters(); renderHistoryList(); }
+        <div>
+          <span class="badge ${issues > 0 ? 'badge-amber' : 'badge-green'}">${issues > 0 ? `${issues} Deficiencies` : '100% OK'}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
 };
 
 // ──────────────────────────────────────────────────────────────────────────────
-// CLOCK
+// EXCEL EXPORT (SHEETJS MATCHING CLIENT PDF EXACTLY)
 // ──────────────────────────────────────────────────────────────────────────────
-function updateClock() {
-  const n = new Date();
-  document.getElementById('top-date').textContent = n.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
-  document.getElementById('top-time').textContent = n.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:true });
-}
-setInterval(updateClock, 1000);
-updateClock();
+window.openExportModal = function() {
+  document.getElementById('export-modal').style.display = 'flex';
+  document.getElementById('export-from-date').value = "2026-10-01";
+  document.getElementById('export-to-date').value = currentDay;
+};
+
+window.closeExportModal = function() {
+  document.getElementById('export-modal').style.display = 'none';
+};
+
+window.exportReport = async function(type) {
+  if (typeof XLSX === 'undefined') {
+    alert("Excel generator library loading, please try in 3 seconds.");
+    return;
+  }
+
+  let datesToExport = [];
+  let fileName = "";
+
+  if (type === 'daily') {
+    datesToExport = [currentDay];
+    fileName = `LV_Spices_Employee_Hygiene_${currentDay}.xlsx`;
+  } else if (type === 'weekly') {
+    const [y, m, d] = currentDay.split('-');
+    const curr = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+    const day = curr.getDay();
+    const diff = curr.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(curr.setDate(diff));
+
+    for (let i = 0; i < 7; i++) {
+      const wDate = new Date(monday);
+      wDate.setDate(monday.getDate() + i);
+      const wStr = `${wDate.getFullYear()}-${String(wDate.getMonth()+1).padStart(2,'0')}-${String(wDate.getDate()).padStart(2,'0')}`;
+      datesToExport.push(wStr);
+    }
+    fileName = `LV_Spices_Employee_Hygiene_Weekly_${currentDay}.xlsx`;
+  } else if (type === 'october' || type === 'monthly') {
+    for (let d = 1; d <= 31; d++) {
+      datesToExport.push(`2026-10-${String(d).padStart(2,'0')}`);
+    }
+    fileName = `LV_Spices_Employee_Hygiene_October_2026.xlsx`;
+  } else if (type === 'all') {
+    datesToExport = Object.keys(allEmployeeRecords).sort();
+    fileName = `LV_Spices_Employee_Hygiene_Complete_Archive.xlsx`;
+  } else if (type === 'custom') {
+    const from = document.getElementById('export-from-date').value;
+    const to = document.getElementById('export-to-date').value;
+    if (!from || !to) { alert("Please select both dates."); return; }
+    datesToExport = Object.keys(allEmployeeRecords).filter(k => k >= from && k <= to).sort();
+    fileName = `LV_Spices_Employee_Hygiene_${from}_to_${to}.xlsx`;
+  }
+
+  if (datesToExport.length === 0) {
+    alert("No records to export.");
+    return;
+  }
+
+  const wb = XLSX.utils.book_new();
+  const sheetRows = [];
+
+  // Sheet Header matching Image 1
+  sheetRows.push(["L V SPICES"]);
+  sheetRows.push(["EMPLOYEE PERSONAL HYGIENE RECORD"]);
+  sheetRows.push([`Month: October`, `Year: 2026`, `Department / Area: Manufacturing & Packaging`]);
+  sheetRows.push([]); // blank
+
+  // Table Columns matching Client PDF:
+  // Date | Employee Name | Clean Uniform | Hand Hygiene | Nails / Hair | Health Status | Corrective Action | Checked By
+  sheetRows.push([
+    "Date",
+    "Employee Name",
+    "Clean Uniform",
+    "Hand Hygiene",
+    "Nails / Hair",
+    "Health Status",
+    "Corrective Action",
+    "Checked By"
+  ]);
+
+  datesToExport.forEach(ds => {
+    const rows = allEmployeeRecords[ds] || createDefaultDay(ds);
+    rows.forEach(r => {
+      sheetRows.push([
+        ds,
+        r.name,
+        r.uniform,
+        r.hygiene,
+        r.nails,
+        r.health,
+        r.corrective || "",
+        r.checkedBy || "Mukesh Vora"
+      ]);
+    });
+  });
+
+  sheetRows.push([]);
+  sheetRows.push(["Mark: OK = Satisfactory; X = Unsatisfactory; NA = Not Applicable. Record corrective actions and re-check any failures."]);
+  sheetRows.push([`Supervisor Name / Signature: Mukesh Vora`, "", "", "", "", "", `Date: ${currentDay}`]);
+
+  const ws = XLSX.utils.aoa_to_sheet(sheetRows);
+
+  ws['!cols'] = [
+    { wch: 14 }, // Date
+    { wch: 22 }, // Employee Name
+    { wch: 16 }, // Clean Uniform
+    { wch: 16 }, // Hand Hygiene
+    { wch: 16 }, // Nails / Hair
+    { wch: 16 }, // Health Status
+    { wch: 45 }, // Corrective Action
+    { wch: 18 }  // Checked By
+  ];
+
+  XLSX.utils.book_append_sheet(wb, ws, "Employee Hygiene");
+  XLSX.writeFile(wb, fileName);
+
+  closeExportModal();
+  showToast(`Excel downloaded: ${fileName}`);
+};
 
 // ──────────────────────────────────────────────────────────────────────────────
-// TOAST
+// TOAST & HELPERS
 // ──────────────────────────────────────────────────────────────────────────────
-function showToast(msg, type = 'info') {
+function showToast(msg) {
   const stack = document.getElementById('toast-stack');
+  if (!stack) return;
   const t = document.createElement('div');
-  t.className = `toast-item ${type}`;
-  t.textContent = msg;
+  t.className = 'toast';
+  t.innerHTML = `✓ ${escapeHtml(msg)}`;
   stack.appendChild(t);
-  setTimeout(() => t.remove(), 3000);
+  setTimeout(() => t.remove(), 3200);
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
 // INIT
 // ──────────────────────────────────────────────────────────────────────────────
-function init() {
-  renderMonthly();
-  populateHistoryFilters();
-}
-init();
+window.addEventListener('DOMContentLoaded', async () => {
+  pregenerateOctober2026Data();
+  await loadDay("2026-10-18");
+});
