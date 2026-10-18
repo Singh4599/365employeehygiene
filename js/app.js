@@ -16,7 +16,7 @@ export const EMPLOYEES = [
 // ──────────────────────────────────────────────────────────────────────────────
 let currentYear = 2026;
 let currentMonth = 10;
-let currentDay = "2026-10-18";
+let currentDay = "2026-10-10"; // Default to Sat, 10 Oct 2026 to match client sheet
 let currentView = 'daily';
 let allEmployeeRecords = {}; // dateStr -> rows
 let hasUnsavedChanges = false;
@@ -155,16 +155,33 @@ export async function loadDay(dateString) {
 // RENDER CURRENT VIEW
 // ──────────────────────────────────────────────────────────────────────────────
 function renderCurrentView() {
-  // Update header text
   const [y, m, d] = currentDay.split('-');
   const monthName = getMonthName(parseInt(m));
 
-  document.getElementById('period-display').textContent = formatDateDisplay(currentDay);
-  document.getElementById('daily-meta-date').textContent = `${d}/${m}/${y}`;
-  document.getElementById('daily-meta-month').textContent = monthName;
-  document.getElementById('daily-meta-year').textContent = y;
-  document.getElementById('csf-sign-date').textContent = `${d}/${m}/${y}`;
-  document.getElementById('top-date').textContent = `${d} ${monthName} ${y}`;
+  // Update Toolbar period display
+  const periodLabel = document.getElementById('period-label');
+  if (periodLabel) {
+    periodLabel.textContent = formatDateDisplay(currentDay);
+  } else {
+    const pDisp = document.getElementById('period-display');
+    if (pDisp) pDisp.textContent = formatDateDisplay(currentDay);
+  }
+
+  // Update Hero Card & Sign-off Chips
+  const metaDate = document.getElementById('daily-meta-date');
+  if (metaDate) metaDate.textContent = `${d}/${m}/${y}`;
+
+  const metaMonth = document.getElementById('daily-meta-month');
+  if (metaMonth) metaMonth.textContent = monthName;
+
+  const metaYear = document.getElementById('daily-meta-year');
+  if (metaYear) metaYear.textContent = y;
+
+  const signDate = document.getElementById('csf-sign-date');
+  if (signDate) signDate.textContent = `${d}/${m}/${y}`;
+
+  const topDate = document.getElementById('top-date');
+  if (topDate) topDate.textContent = `${parseInt(d)} ${monthName} ${y}`;
 
   if (currentView === 'daily') {
     renderDailyTable();
@@ -176,7 +193,7 @@ function renderCurrentView() {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// RENDER DAILY TABLE (MATCHING CLIENT PDF SHEET EXACTLY)
+// RENDER DAILY TABLE (MATCHING CLIENT REFERENCE MOCKUP EXACTLY)
 // ──────────────────────────────────────────────────────────────────────────────
 function renderDailyTable() {
   const tbody = document.getElementById('daily-body');
@@ -199,39 +216,83 @@ function renderDailyTable() {
     tr.className = isFail ? 'tr-issue' : '';
 
     tr.innerHTML = `
-      <td class="center font-bold text-muted">${dateShort}</td>
-      <td class="emp-name-cell"><strong>${escapeHtml(row.name)}</strong></td>
+      <td class="td-num">${idx + 1}</td>
+      <td class="td-date">${dateShort}</td>
+      <td class="td-name">${escapeHtml(row.name)}</td>
       <td class="center">
-        <button class="status-btn ${getStatusClass(row.uniform)}" onclick="toggleStatusCell(${idx}, 'uniform')">${escapeHtml(row.uniform)}</button>
-      </td>
-      <td class="center">
-        <button class="status-btn ${getStatusClass(row.hygiene)}" onclick="toggleStatusCell(${idx}, 'hygiene')">${escapeHtml(row.hygiene)}</button>
-      </td>
-      <td class="center">
-        <button class="status-btn ${getStatusClass(row.nails)}" onclick="toggleStatusCell(${idx}, 'nails')">${escapeHtml(row.nails)}</button>
+        <button type="button" class="status-pill-btn ${getStatusClass(row.uniform)}" onclick="toggleStatusCell(${idx}, 'uniform')">
+          <span class="status-dot">${getStatusIcon(row.uniform)}</span>
+          <span>${escapeHtml(row.uniform)}</span>
+        </button>
       </td>
       <td class="center">
-        <button class="status-btn ${getStatusClass(row.health)}" onclick="toggleStatusCell(${idx}, 'health')">${escapeHtml(row.health)}</button>
+        <button type="button" class="status-pill-btn ${getStatusClass(row.hygiene)}" onclick="toggleStatusCell(${idx}, 'hygiene')">
+          <span class="status-dot">${getStatusIcon(row.hygiene)}</span>
+          <span>${escapeHtml(row.hygiene)}</span>
+        </button>
       </td>
-      <td class="editable-cell" onclick="editCorrectiveCell(${idx})">
-        ${row.corrective ? `<span class="issue-text">${escapeHtml(row.corrective)}</span>` : '<span class="text-muted">—</span>'}
+      <td class="center">
+        <button type="button" class="status-pill-btn ${getStatusClass(row.nails)}" onclick="toggleStatusCell(${idx}, 'nails')">
+          <span class="status-dot">${getStatusIcon(row.nails)}</span>
+          <span>${escapeHtml(row.nails)}</span>
+        </button>
       </td>
-      <td class="center font-semibold">${escapeHtml(row.checkedBy || 'Mukesh Vora')}</td>
+      <td class="center">
+        <button type="button" class="status-pill-btn ${getStatusClass(row.health)}" onclick="toggleStatusCell(${idx}, 'health')">
+          <span class="status-dot">${getStatusIcon(row.health)}</span>
+          <span>${escapeHtml(row.health)}</span>
+        </button>
+      </td>
+      <td class="td-corr" onclick="editCorrectiveCell(${idx})">
+        ${row.corrective ? `<span class="corr-pill-wrap">⚠ ${escapeHtml(row.corrective)}</span>` : '<span class="text-muted-dash">—</span>'}
+      </td>
+      <td class="td-supervisor">${escapeHtml(row.checkedBy || 'Mukesh Vora')}</td>
     `;
     tbody.appendChild(tr);
   });
 
-  // Metrics
-  document.getElementById('stat-ok-daily').textContent = okCount;
-  document.getElementById('stat-fail-daily').textContent = failCount;
+  // Numbers in Quick Metrics
+  const statOk = document.getElementById('stat-ok-daily');
+  if (statOk) statOk.textContent = okCount;
+
+  const statFail = document.getElementById('stat-fail-daily');
+  if (statFail) statFail.textContent = failCount;
+
   const pct = rows.length > 0 ? Math.round((okCount / rows.length) * 100) : 100;
-  document.getElementById('stat-score-daily').textContent = `${pct}%`;
+  const statScore = document.getElementById('stat-score-daily');
+  if (statScore) statScore.textContent = `${pct}%`;
+
+  // Circular Rings (Radius 17, Circumference = 106.8)
+  const c = 106.8;
+  const ringOk = document.getElementById('ring-ok-prog');
+  if (ringOk) {
+    const ratio = rows.length > 0 ? (okCount / rows.length) : 1;
+    ringOk.style.strokeDashoffset = (c * (1 - ratio)).toFixed(1);
+  }
+
+  const ringFail = document.getElementById('ring-fail-prog');
+  if (ringFail) {
+    const ratio = rows.length > 0 ? (failCount / rows.length) : 0;
+    ringFail.style.strokeDashoffset = (c * (1 - ratio)).toFixed(1);
+  }
+
+  const ringScore = document.getElementById('ring-score-prog');
+  if (ringScore) {
+    const ratio = pct / 100;
+    ringScore.style.strokeDashoffset = (c * (1 - ratio)).toFixed(1);
+  }
+}
+
+function getStatusIcon(status) {
+  if (status === 'OK') return '✔';
+  if (status === 'X') return '✖';
+  return '—';
 }
 
 function getStatusClass(status) {
-  if (status === 'OK') return 'sb-ok';
-  if (status === 'X') return 'sb-fail';
-  return 'sb-na';
+  if (status === 'OK') return 'sp-ok';
+  if (status === 'X') return 'sp-fail';
+  return 'sp-na';
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -256,7 +317,6 @@ window.toggleStatusCell = function(empIdx, field) {
     else if (field === "nails") rows[empIdx].corrective = "Nails trimmed and sanitized before entry";
     else if (field === "health") rows[empIdx].corrective = "Minor cold symptoms noted, assigned to non-contact area";
   } else if (next === "OK") {
-    // Check if other fields are fail
     const stillFail = (rows[empIdx].uniform === 'X' || rows[empIdx].hygiene === 'X' || rows[empIdx].nails === 'X' || rows[empIdx].health === 'X');
     if (!stillFail) rows[empIdx].corrective = "";
   }
@@ -325,13 +385,31 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
+// ──────────────────────────────────────────────────────────────────────────────
+// MOBILE DRAWER NAVIGATION
+// ──────────────────────────────────────────────────────────────────────────────
+window.toggleMobileSidebar = function() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  if (!sidebar) return;
+
+  const isOpen = sidebar.classList.contains('mobile-open');
+  if (isOpen) {
+    sidebar.classList.remove('mobile-open');
+    if (overlay) overlay.classList.remove('active');
+  } else {
+    sidebar.classList.add('mobile-open');
+    if (overlay) overlay.classList.add('active');
+  }
+};
 
 // ──────────────────────────────────────────────────────────────────────────────
 // RENDER MONTHLY MATRIX
 // ──────────────────────────────────────────────────────────────────────────────
 function renderMonthlyGrid() {
   const totalDays = daysInMonth(currentYear, currentMonth);
-  document.getElementById('rh-month').textContent = formatMonthYear(currentYear, currentMonth);
+  const rhMonth = document.getElementById('rh-month');
+  if (rhMonth) rhMonth.textContent = formatMonthYear(currentYear, currentMonth);
 
   const table = document.getElementById('monthly-grid');
   if (!table) return;
@@ -355,7 +433,7 @@ function renderMonthlyGrid() {
   for (let d = 1; d <= totalDays; d++) {
     const ds = dateStr(currentYear, currentMonth, d);
     const isCurrent = (ds === currentDay);
-    headerHtml += `<th class="day-th ${isCurrent ? 'active-day-col' : ''}" onclick="selectDate('${ds}')">${d}</th>`;
+    headerHtml += `<th class="day-th ${isCurrent ? 'today-col' : ''}" onclick="selectDate('${ds}')">${d}</th>`;
   }
   headerHtml += `</tr></thead>`;
 
@@ -363,7 +441,7 @@ function renderMonthlyGrid() {
   let bodyHtml = '<tbody>';
   const monthIssues = [];
 
-  EMPLOYEES.forEach((empName, empIdx) => {
+  EMPLOYEES.forEach((empName) => {
     bodyHtml += `<tr><td class="name-col"><strong>${empName}</strong></td>`;
     for (let d = 1; d <= totalDays; d++) {
       const ds = dateStr(currentYear, currentMonth, d);
@@ -371,7 +449,7 @@ function renderMonthlyGrid() {
       const empRow = rows.find(r => r.name === empName);
 
       if (!empRow) {
-        bodyHtml += `<td class="day-cell">—</td>`;
+        bodyHtml += `<td class="day-cell cell-na">—</td>`;
         continue;
       }
 
@@ -382,7 +460,7 @@ function renderMonthlyGrid() {
 
       bodyHtml += `
         <td class="day-cell ${hasFail ? 'cell-fail' : 'cell-ok'}" onclick="selectDate('${ds}')" title="${empName} (${ds}): ${hasFail ? 'X' : 'OK'}">
-          ${hasFail ? '✗' : '✓'}
+          ${hasFail ? '✖' : '✔'}
         </td>
       `;
     }
@@ -391,6 +469,29 @@ function renderMonthlyGrid() {
   bodyHtml += '</tbody>';
 
   table.innerHTML = headerHtml + bodyHtml;
+
+  // Monthly stat pills
+  const statPills = document.getElementById('stat-pills');
+  if (statPills) {
+    const totalChecks = EMPLOYEES.length * totalDays;
+    const okChecks = totalChecks - monthIssues.length;
+    const compliancePct = Math.round((okChecks / totalChecks) * 100);
+
+    statPills.innerHTML = `
+      <div class="stat-pill ok">
+        <div class="stat-pill-num">${okChecks}</div>
+        <div class="stat-pill-label">Total OK Checks</div>
+      </div>
+      <div class="stat-pill issues">
+        <div class="stat-pill-num">${monthIssues.length}</div>
+        <div class="stat-pill-label">Deficiencies Recorded</div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-pill-num">${compliancePct}%</div>
+        <div class="stat-pill-label">Monthly Compliance Rate</div>
+      </div>
+    `;
+  }
 
   // Issues section
   const issuesBlock = document.getElementById('issues-block');
@@ -401,9 +502,9 @@ function renderMonthlyGrid() {
       issuesBody.innerHTML = monthIssues.map(it => `
         <tr>
           <td><strong>${it.date}</strong></td>
-          <td>${it.name}</td>
-          <td><span class="badge badge-red">Hygiene Alert</span></td>
-          <td>${it.corrective}</td>
+          <td><strong>${escapeHtml(it.name)}</strong></td>
+          <td><span class="badge badge-red" style="color:#B91C1C; font-weight:700;">Hygiene Deficiency</span></td>
+          <td>${escapeHtml(it.corrective)}</td>
           <td>Mukesh Vora</td>
         </tr>
       `).join('');
@@ -466,6 +567,14 @@ window.switchView = function(view) {
   document.getElementById('view-monthly').style.display = (view === 'monthly') ? 'block' : 'none';
   document.getElementById('view-history').style.display = (view === 'history') ? 'block' : 'none';
 
+  // Auto-close mobile drawer if open
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  if (sidebar && sidebar.classList.contains('mobile-open')) {
+    sidebar.classList.remove('mobile-open');
+    if (overlay) overlay.classList.remove('active');
+  }
+
   renderCurrentView();
 };
 
@@ -509,12 +618,12 @@ window.renderHistoryList = async function() {
     const issues = rows.filter(r => r.uniform === 'X' || r.hygiene === 'X' || r.nails === 'X' || r.health === 'X').length;
     return `
       <div class="history-item-row" onclick="selectDate('${ds}')">
-        <div>
-          <strong>${formatDateDisplay(ds)}</strong>
-          <div style="font-size:12px; color:#64748B; margin-top:3px;">Supervisor: Mukesh Vora • 11 Staff Verified</div>
+        <div class="hist-card-left">
+          <h4>${formatDateDisplay(ds)}</h4>
+          <p>Supervisor: Mukesh Vora • 11 Staff Verified</p>
         </div>
         <div>
-          <span class="badge ${issues > 0 ? 'badge-amber' : 'badge-green'}">${issues > 0 ? `${issues} Deficiencies` : '100% OK'}</span>
+          <span class="hist-badge ${issues > 0 ? 'issues' : 'ok'}">${issues > 0 ? `${issues} Deficiencies` : '100% OK'}</span>
         </div>
       </div>
     `;
@@ -584,13 +693,13 @@ window.exportReport = async function(type) {
   const wb = XLSX.utils.book_new();
   const sheetRows = [];
 
-  // Sheet Header matching Image 1
+  // Sheet Header matching Client Mockup
   sheetRows.push(["L V SPICES"]);
   sheetRows.push(["EMPLOYEE PERSONAL HYGIENE RECORD"]);
   sheetRows.push([`Month: October`, `Year: 2026`, `Department / Area: Manufacturing & Packaging`]);
   sheetRows.push([]); // blank
 
-  // Table Columns matching Client PDF:
+  // Table Columns:
   // Date | Employee Name | Clean Uniform | Hand Hygiene | Nails / Hair | Health Status | Corrective Action | Checked By
   sheetRows.push([
     "Date",
@@ -671,5 +780,5 @@ function escapeHtml(str) {
 // ──────────────────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   pregenerateOctober2026Data();
-  await loadDay("2026-10-18");
+  await loadDay("2026-10-10");
 });
