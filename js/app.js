@@ -49,44 +49,66 @@ function getMonthName(monthNum) {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// OCTOBER 2026 PRE-POPULATION
+// HISTORICAL PRE-POPULATION (APRIL - OCTOBER 2026)
 // ──────────────────────────────────────────────────────────────────────────────
-function pregenerateOctober2026Data() {
-  for (let day = 1; day <= 18; day++) {
-    const ds = dateStr(2026, 10, day);
-    if (!allEmployeeRecords[ds]) {
-      const isIssueDay = (day === 5 || day === 12); // Mon Oct 5 and Mon Oct 12
+function pregenerateHistoricalData() {
+  const months = [
+    { m: 4, days: 30, auditDay: 13, badEmp: "Suraj", field: "uniform", text: "Uniform soiled, replacement clean apron provided" },
+    { m: 5, days: 31, auditDay: 11, badEmp: "Pratap", field: "nails", text: "Nails untrimmed, trimmed on spot & sanitized before shift" },
+    { m: 6, days: 30, auditDay: 15, badEmp: "Mahesh", field: "uniform", text: "Apron strap loose, replaced with fresh clean apron" },
+    { m: 7, days: 31, auditDay: 13, badEmp: "Suraj", field: "uniform", text: "Uniform soiled, replacement clean apron provided" },
+    { m: 8, days: 31, auditDay: 10, badEmp: "Pratap", field: "nails", text: "Nails untrimmed, trimmed on spot & sanitized before shift" },
+    { m: 9, days: 30, auditDay: 14, badEmp: "Anil", field: "uniform", text: "Hairnet misplaced, replacement hairnet issued before shift" },
+    { m: 10, days: 19, auditDay: 5, badEmp: "Pratap", field: "nails", text: "Nails untrimmed, trimmed on spot & sanitized before shift", auditDay2: 12, badEmp2: "Suraj", field2: "uniform", text2: "Uniform soiled, replacement clean apron provided" }
+  ];
 
-      const rows = EMPLOYEES.map(emp => {
-        let uniform = "OK";
-        let hygiene = "OK";
-        let nails = "OK";
-        let health = "OK";
-        let corrective = "";
-
-        if (isIssueDay && day === 5 && emp === "Pratap") {
-          nails = "X";
-          corrective = "Nails untrimmed, trimmed on spot & sanitized before shift";
-        } else if (isIssueDay && day === 12 && emp === "Suraj") {
-          uniform = "X";
-          corrective = "Uniform soiled, replacement clean apron provided";
+  for (const mInfo of months) {
+    for (let day = 1; day <= mInfo.days; day++) {
+      const ds = dateStr(2026, mInfo.m, day);
+      if (!allEmployeeRecords[ds]) {
+        const local = localStorage.getItem(`lv_emp_${ds}`);
+        if (local) {
+          try {
+            allEmployeeRecords[ds] = JSON.parse(local);
+            continue;
+          } catch(e) {}
         }
 
-        return {
-          date: ds,
-          name: emp,
-          uniform: uniform,
-          hygiene: hygiene,
-          nails: nails,
-          health: health,
-          corrective: corrective,
-          checkedBy: "Mukesh Vora"
-        };
-      });
+        const isAudit1 = (day === mInfo.auditDay);
+        const isAudit2 = (mInfo.auditDay2 && day === mInfo.auditDay2);
 
-      allEmployeeRecords[ds] = rows;
-      localStorage.setItem(`lv_emp_${ds}`, JSON.stringify(rows));
-      saveEmployeeDayToCloud(ds, rows).catch(() => {});
+        const rows = EMPLOYEES.map(emp => {
+          let uniform = "OK";
+          let hygiene = "OK";
+          let nails = "OK";
+          let health = "OK";
+          let corrective = "";
+
+          if (isAudit1 && emp === mInfo.badEmp) {
+            if (mInfo.field === 'nails') nails = "X";
+            else uniform = "X";
+            corrective = mInfo.text;
+          } else if (isAudit2 && emp === mInfo.badEmp2) {
+            if (mInfo.field2 === 'nails') nails = "X";
+            else uniform = "X";
+            corrective = mInfo.text2;
+          }
+
+          return {
+            date: ds,
+            name: emp,
+            uniform: uniform,
+            hygiene: hygiene,
+            nails: nails,
+            health: health,
+            corrective: corrective,
+            checkedBy: "Mukesh Vora"
+          };
+        });
+
+        allEmployeeRecords[ds] = rows;
+        localStorage.setItem(`lv_emp_${ds}`, JSON.stringify(rows));
+      }
     }
   }
 }
@@ -584,9 +606,9 @@ window.renderHistoryList = async function() {
     }
   }
 
-  // Ensure current October days 1-18 are in memory
+  // Ensure historical records are in memory
   if (Object.keys(allEmployeeRecords).length === 0) {
-    pregenerateOctober2026Data();
+    pregenerateHistoricalData();
   }
 
   function displayList() {
@@ -694,11 +716,16 @@ window.exportReport = async function(type) {
       datesToExport.push(wStr);
     }
     fileName = `LV_Spices_Employee_Hygiene_Weekly_${currentDay}.xlsx`;
-  } else if (type === 'october' || type === 'monthly') {
-    for (let d = 1; d <= 31; d++) {
-      datesToExport.push(`2026-10-${String(d).padStart(2,'0')}`);
+  } else if (type === 'monthly' || type === 'october') {
+    const mSel = document.getElementById('hist-month-sel');
+    const ySel = document.getElementById('hist-year-sel');
+    const m = (currentView === 'history' && mSel) ? parseInt(mSel.value) : currentMonth;
+    const y = (currentView === 'history' && ySel) ? parseInt(ySel.value) : currentYear;
+    const totalDays = daysInMonth(y, m);
+    for (let d = 1; d <= totalDays; d++) {
+      datesToExport.push(dateStr(y, m, d));
     }
-    fileName = `LV_Spices_Employee_Hygiene_October_2026.xlsx`;
+    fileName = `LV_Spices_Employee_Hygiene_${getMonthName(m)}_${y}.xlsx`;
   } else if (type === 'all') {
     datesToExport = Object.keys(allEmployeeRecords).sort();
     fileName = `LV_Spices_Employee_Hygiene_Complete_Archive.xlsx`;
@@ -718,10 +745,15 @@ window.exportReport = async function(type) {
   const wb = XLSX.utils.book_new();
   const sheetRows = [];
 
+  const mSel = document.getElementById('hist-month-sel');
+  const ySel = document.getElementById('hist-year-sel');
+  const expMonth = (currentView === 'history' && mSel) ? parseInt(mSel.value) : currentMonth;
+  const expYear = (currentView === 'history' && ySel) ? parseInt(ySel.value) : currentYear;
+
   // Sheet Header matching Client Mockup
   sheetRows.push(["L V SPICES"]);
   sheetRows.push(["EMPLOYEE PERSONAL HYGIENE RECORD"]);
-  sheetRows.push([`Month: October`, `Year: 2026`, `Department / Area: Manufacturing & Packaging`]);
+  sheetRows.push([`Month: ${getMonthName(expMonth)}`, `Year: ${expYear}`, `Department / Area: Manufacturing & Packaging`]);
   sheetRows.push([]); // blank
 
   // Table Columns:
@@ -804,6 +836,6 @@ function escapeHtml(str) {
 // INIT
 // ──────────────────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
-  pregenerateOctober2026Data();
-  await loadDay("2026-10-10");
+  pregenerateHistoricalData();
+  await loadDay("2026-10-18");
 });
