@@ -318,6 +318,24 @@
                       <path d="M10 10.5V6a2 2 0 00-2-2v0a2 2 0 00-2 2v8"></path>
                       <path d="M18 8a2 2 0 114 0v6a8 8 0 01-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 012.83-2.82L7 15"></path>
                     </svg>
+                    <span>HAND GLOVES</span>
+                  </div>
+                </th>
+                <th class="th-col-check">
+                  <div class="th-inner-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                      <path d="M12 3a7 7 0 00-7 7c0 3 2 5.5 4 7h6c2-1.5 4-4 4-7a7 7 0 00-7-7z"></path>
+                      <path d="M8 17h8v2H8z"></path>
+                    </svg>
+                    <span>HEAD CAP</span>
+                  </div>
+                </th>
+                <th class="th-col-check">
+                  <div class="th-inner-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                      <path d="M7 11V7a5 5 0 0110 0v4"></path>
+                      <circle cx="12" cy="12" r="9"></circle>
+                    </svg>
                     <span>HAND HYGIENE</span>
                   </div>
                 </th>
@@ -484,22 +502,16 @@
 
       <div class="history-filters-row">
         <select class="h-select" id="hist-month-sel" onchange="renderHistoryList()">
-          <option value="10">October</option>
+          <option value="10" selected>October (Current)</option>
           <option value="9">September</option>
           <option value="8">August</option>
           <option value="7">July</option>
           <option value="6">June</option>
           <option value="5">May</option>
-          <option value="4">April</option>
-          <option value="3">March</option>
-          <option value="2">February</option>
-          <option value="1">January</option>
-          <option value="11">November</option>
-          <option value="12">December</option>
+          <option value="4">April (Audit Start)</option>
         </select>
         <select class="h-select" id="hist-year-sel" onchange="renderHistoryList()">
-          <option value="2026">2026</option>
-          <option value="2025">2025</option>
+          <option value="2026" selected>2026</option>
         </select>
         <button class="btn-export-excel" style="height:38px;" onclick="exportReport('monthly')">Download Month Report (.xlsx)</button>
       </div>

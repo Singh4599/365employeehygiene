@@ -295,6 +295,12 @@ html, body {
   border-color: #D0D5DD;
   color: var(--text-dark);
 }
+.date-arrow-btn:disabled,
+.date-arrow-btn.disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
 
 .date-display-card {
   display: flex;
@@ -961,6 +967,7 @@ html, body {
 .cell-ok   { color: var(--success-green); font-weight: 800; }
 .cell-fail { color: var(--brand-red); font-weight: 800; }
 .cell-na   { color: var(--text-light); }
+.cell-future { color: #CBD5E1; background: #F8FAFC; cursor: not-allowed !important; pointer-events: none; }
 .today-col { background: var(--brand-blush) !important; }
 
 /* Issues Table */

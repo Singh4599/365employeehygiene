@@ -11,12 +11,45 @@ export const EMPLOYEES = [
   "Golu Yadav", "Mahesh", "Rajkumar", "Pratap", "Suraj", "Suchitra", "Anil"
 ];
 
+// Audit Date Bounds: Strictly April 1, 2026 to October 19, 2026 (No future dates)
+export const MIN_DATE = "2026-04-01";
+export const MAX_DATE = "2026-10-19";
+
+// ──────────────────────────────────────────────────────────────────────────────
+// REGULAR DEFICIENCIES SCHEDULE (Every 8-10 Days across April - October 2026)
+// ──────────────────────────────────────────────────────────────────────────────
+export const EMPLOYEE_DEFICIENCIES = {
+  "2026-04-08": { badEmp: "Suraj",             field: "gloves",  text: "Hand gloves torn during sorting, discarded & sterile pair issued before shift" },
+  "2026-04-16": { badEmp: "Pratap",            field: "headCap", text: "Hair strands protruding from cap, replaced with fresh elastic head cap" },
+  "2026-04-25": { badEmp: "Mahesh",            field: "uniform", text: "Uniform apron stained with spice blend, fresh clean apron provided" },
+  "2026-05-04": { badEmp: "Golu Yadav",        field: "nails",   text: "Nails untrimmed, trimmed on spot & sanitized before shift entry" },
+  "2026-05-13": { badEmp: "Suchitra",          field: "gloves",  text: "Gloves had minor puncture, replaced immediately with fresh nitrile pair" },
+  "2026-05-22": { badEmp: "Anil",              field: "headCap", text: "Head cap missing at morning lineup, sterile head cap issued before entry" },
+  "2026-05-30": { badEmp: "Vinod Singh",        field: "uniform", text: "Apron strap loose, replaced with fresh clean apron before packing" },
+  "2026-06-08": { badEmp: "Rajkumar",          field: "nails",   text: "Nails untrimmed, trimmed on spot & sanitized before shift entry" },
+  "2026-06-17": { badEmp: "Suraj",             field: "gloves",  text: "Gloves worn out, replaced with food-grade nitrile gloves" },
+  "2026-06-26": { badEmp: "Pratap",            field: "headCap", text: "Head cap worn improperly, repositioned and hair completely enclosed" },
+  "2026-07-05": { badEmp: "Vishal Chaturvedi", field: "uniform", text: "Uniform soiled, replacement clean apron provided" },
+  "2026-07-14": { badEmp: "Mahesh",            field: "nails",   text: "Nails untrimmed, trimmed on spot & sanitized before shift entry" },
+  "2026-07-23": { badEmp: "Golu Yadav",        field: "gloves",  text: "Hand gloves torn, discarded & sterile pair issued before shift" },
+  "2026-08-02": { badEmp: "Suchitra",          field: "headCap", text: "Head cap loose, replaced with secure elastic cap before cleanroom entry" },
+  "2026-08-11": { badEmp: "Anil",              field: "uniform", text: "Uniform apron stained, fresh clean apron provided" },
+  "2026-08-20": { badEmp: "Pratap",            field: "nails",   text: "Nails untrimmed, trimmed on spot & sanitized before shift entry" },
+  "2026-08-29": { badEmp: "Suraj",             field: "gloves",  text: "Hand gloves replaced with sterile pair before food handling" },
+  "2026-09-07": { badEmp: "Rajkumar",          field: "headCap", text: "Head cap replaced with fresh clean cap before line startup" },
+  "2026-09-16": { badEmp: "Vinod Singh",        field: "uniform", text: "Apron soiled during batch prep, clean attire verified" },
+  "2026-09-25": { badEmp: "Mahesh",            field: "nails",   text: "Nails untrimmed, trimmed on spot & sanitized before entry" },
+  "2026-10-04": { badEmp: "Pratap",            field: "gloves",  text: "Hand gloves torn during spice handling, sterile pair issued" },
+  "2026-10-12": { badEmp: "Suraj",             field: "headCap", text: "Head cap misplaced, replacement hairnet/head cap issued before shift" },
+  "2026-10-18": { badEmp: "Anil",              field: "uniform", text: "Uniform apron stained with turmeric, fresh clean apron issued immediately" }
+};
+
 // ──────────────────────────────────────────────────────────────────────────────
 // STATE
 // ──────────────────────────────────────────────────────────────────────────────
 let currentYear = 2026;
 let currentMonth = 10;
-let currentDay = "2026-10-10"; // Default to Sat, 10 Oct 2026 to match client sheet
+let currentDay = "2026-10-19"; // Default to today: Mon, 19 Oct 2026
 let currentView = 'daily';
 let allEmployeeRecords = {}; // dateStr -> rows
 let hasUnsavedChanges = false;
@@ -48,56 +81,76 @@ function getMonthName(monthNum) {
   return months[monthNum - 1] || "";
 }
 
+export function normalizeEmployeeRow(r, ds) {
+  return {
+    date: r.date || ds,
+    name: r.name,
+    uniform: r.uniform || "OK",
+    gloves: r.gloves || "OK",
+    headCap: r.headCap || "OK",
+    hygiene: r.hygiene || "OK",
+    nails: r.nails || "OK",
+    health: r.health || "OK",
+    corrective: r.corrective || "",
+    checkedBy: r.checkedBy || "Mukesh Vora"
+  };
+}
+
 // ──────────────────────────────────────────────────────────────────────────────
-// HISTORICAL PRE-POPULATION (APRIL - OCTOBER 2026)
+// HISTORICAL PRE-POPULATION (APRIL - OCTOBER 19, 2026)
 // ──────────────────────────────────────────────────────────────────────────────
 function pregenerateHistoricalData() {
   const months = [
-    { m: 4, days: 30, auditDay: 13, badEmp: "Suraj", field: "uniform", text: "Uniform soiled, replacement clean apron provided" },
-    { m: 5, days: 31, auditDay: 11, badEmp: "Pratap", field: "nails", text: "Nails untrimmed, trimmed on spot & sanitized before shift" },
-    { m: 6, days: 30, auditDay: 15, badEmp: "Mahesh", field: "uniform", text: "Apron strap loose, replaced with fresh clean apron" },
-    { m: 7, days: 31, auditDay: 13, badEmp: "Suraj", field: "uniform", text: "Uniform soiled, replacement clean apron provided" },
-    { m: 8, days: 31, auditDay: 10, badEmp: "Pratap", field: "nails", text: "Nails untrimmed, trimmed on spot & sanitized before shift" },
-    { m: 9, days: 30, auditDay: 14, badEmp: "Anil", field: "uniform", text: "Hairnet misplaced, replacement hairnet issued before shift" },
-    { m: 10, days: 19, auditDay: 5, badEmp: "Pratap", field: "nails", text: "Nails untrimmed, trimmed on spot & sanitized before shift", auditDay2: 12, badEmp2: "Suraj", field2: "uniform", text2: "Uniform soiled, replacement clean apron provided" }
+    { m: 4, days: 30 },
+    { m: 5, days: 31 },
+    { m: 6, days: 30 },
+    { m: 7, days: 31 },
+    { m: 8, days: 31 },
+    { m: 9, days: 30 },
+    { m: 10, days: 19 } // Strictly up to today 19 October 2026
   ];
 
   for (const mInfo of months) {
     for (let day = 1; day <= mInfo.days; day++) {
       const ds = dateStr(2026, mInfo.m, day);
+      if (ds > MAX_DATE || ds < MIN_DATE) continue;
+
       if (!allEmployeeRecords[ds]) {
         const local = localStorage.getItem(`lv_emp_${ds}`);
         if (local) {
           try {
-            allEmployeeRecords[ds] = JSON.parse(local);
+            const parsed = JSON.parse(local);
+            const rows = Array.isArray(parsed) ? parsed : (parsed.rows || []);
+            allEmployeeRecords[ds] = rows.map(r => normalizeEmployeeRow(r, ds));
             continue;
           } catch(e) {}
         }
 
-        const isAudit1 = (day === mInfo.auditDay);
-        const isAudit2 = (mInfo.auditDay2 && day === mInfo.auditDay2);
+        const def = EMPLOYEE_DEFICIENCIES[ds] || null;
 
         const rows = EMPLOYEES.map(emp => {
           let uniform = "OK";
+          let gloves = "OK";
+          let headCap = "OK";
           let hygiene = "OK";
           let nails = "OK";
           let health = "OK";
           let corrective = "";
 
-          if (isAudit1 && emp === mInfo.badEmp) {
-            if (mInfo.field === 'nails') nails = "X";
+          if (def && emp === def.badEmp) {
+            if (def.field === 'gloves') gloves = "X";
+            else if (def.field === 'headCap') headCap = "X";
+            else if (def.field === 'nails') nails = "X";
             else uniform = "X";
-            corrective = mInfo.text;
-          } else if (isAudit2 && emp === mInfo.badEmp2) {
-            if (mInfo.field2 === 'nails') nails = "X";
-            else uniform = "X";
-            corrective = mInfo.text2;
+            corrective = def.text;
           }
 
           return {
             date: ds,
             name: emp,
             uniform: uniform,
+            gloves: gloves,
+            headCap: headCap,
             hygiene: hygiene,
             nails: nails,
             health: health,
@@ -121,6 +174,8 @@ function createDefaultDay(ds) {
     date: ds,
     name: emp,
     uniform: "OK",
+    gloves: "OK",
+    headCap: "OK",
     hygiene: "OK",
     nails: "OK",
     health: "OK",
@@ -133,6 +188,10 @@ function createDefaultDay(ds) {
 // LOAD DAY RECORD
 // ──────────────────────────────────────────────────────────────────────────────
 export async function loadDay(dateString) {
+  // Enforce strict date boundaries: April 1, 2026 <= date <= October 19, 2026
+  if (dateString > MAX_DATE) dateString = MAX_DATE;
+  if (dateString < MIN_DATE) dateString = MIN_DATE;
+
   currentDay = dateString;
   const [y, m, d] = dateString.split('-');
   currentYear = parseInt(y);
@@ -146,8 +205,12 @@ export async function loadDay(dateString) {
     const local = localStorage.getItem(`lv_emp_${dateString}`);
     if (local) {
       try {
-        rows = JSON.parse(local);
-        allEmployeeRecords[dateString] = rows;
+        const parsed = JSON.parse(local);
+        rows = Array.isArray(parsed) ? parsed : (parsed.rows || null);
+        if (rows) {
+          rows = rows.map(r => normalizeEmployeeRow(r, dateString));
+          allEmployeeRecords[dateString] = rows;
+        }
       } catch (e) {}
     }
   }
@@ -156,7 +219,7 @@ export async function loadDay(dateString) {
   if (!rows) {
     const cloud = await loadEmployeeDayFromCloud(dateString);
     if (cloud && cloud.rows) {
-      rows = cloud.rows;
+      rows = cloud.rows.map(r => normalizeEmployeeRow(r, dateString));
       allEmployeeRecords[dateString] = rows;
       localStorage.setItem(`lv_emp_${dateString}`, JSON.stringify(rows));
     }
@@ -168,6 +231,9 @@ export async function loadDay(dateString) {
     allEmployeeRecords[dateString] = rows;
     localStorage.setItem(`lv_emp_${dateString}`, JSON.stringify(rows));
     saveEmployeeDayToCloud(dateString, rows).catch(() => {});
+  } else {
+    rows = rows.map(r => normalizeEmployeeRow(r, dateString));
+    allEmployeeRecords[dateString] = rows;
   }
 
   renderCurrentView();
@@ -187,6 +253,20 @@ function renderCurrentView() {
   } else {
     const pDisp = document.getElementById('period-display');
     if (pDisp) pDisp.textContent = formatDateDisplay(currentDay);
+  }
+
+  // Update Date Navigation Buttons (disable next button on today 19 Oct 2026)
+  const btnPrev = document.getElementById('btn-prev');
+  const btnNext = document.getElementById('btn-next');
+  if (btnPrev) {
+    const atMin = (currentDay <= MIN_DATE);
+    btnPrev.disabled = atMin;
+    btnPrev.classList.toggle('disabled', atMin);
+  }
+  if (btnNext) {
+    const atMax = (currentDay >= MAX_DATE);
+    btnNext.disabled = atMax;
+    btnNext.classList.toggle('disabled', atMax);
   }
 
   // Update Hero Card & Sign-off Chips
@@ -215,7 +295,7 @@ function renderCurrentView() {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// RENDER DAILY TABLE (MATCHING CLIENT REFERENCE MOCKUP EXACTLY)
+// RENDER DAILY TABLE (INCLUDES HAND GLOVES AND HEAD CAP)
 // ──────────────────────────────────────────────────────────────────────────────
 function renderDailyTable() {
   const tbody = document.getElementById('daily-body');
@@ -230,7 +310,14 @@ function renderDailyTable() {
   const dateShort = `${d}/${m}/${y}`;
 
   rows.forEach((row, idx) => {
-    const isFail = (row.uniform === 'X' || row.hygiene === 'X' || row.nails === 'X' || row.health === 'X');
+    const isFail = (
+      row.uniform === 'X' ||
+      row.gloves === 'X' ||
+      row.headCap === 'X' ||
+      row.hygiene === 'X' ||
+      row.nails === 'X' ||
+      row.health === 'X'
+    );
     if (isFail) failCount++;
     else okCount++;
 
@@ -245,6 +332,18 @@ function renderDailyTable() {
         <button type="button" class="status-pill-btn ${getStatusClass(row.uniform)}" onclick="toggleStatusCell(${idx}, 'uniform')">
           <span class="status-dot">${getStatusIcon(row.uniform)}</span>
           <span>${escapeHtml(row.uniform)}</span>
+        </button>
+      </td>
+      <td class="center">
+        <button type="button" class="status-pill-btn ${getStatusClass(row.gloves)}" onclick="toggleStatusCell(${idx}, 'gloves')">
+          <span class="status-dot">${getStatusIcon(row.gloves)}</span>
+          <span>${escapeHtml(row.gloves)}</span>
+        </button>
+      </td>
+      <td class="center">
+        <button type="button" class="status-pill-btn ${getStatusClass(row.headCap)}" onclick="toggleStatusCell(${idx}, 'headCap')">
+          <span class="status-dot">${getStatusIcon(row.headCap)}</span>
+          <span>${escapeHtml(row.headCap)}</span>
         </button>
       </td>
       <td class="center">
@@ -323,11 +422,20 @@ window.toggleStatusCell = function(empIdx, field) {
   // Auto suggest corrective action if X
   if (next === "X" && !rows[empIdx].corrective) {
     if (field === "uniform") rows[empIdx].corrective = "Uniform changed before shift, clean attire verified";
+    else if (field === "gloves") rows[empIdx].corrective = "Hand gloves replaced with sterile pair before food handling";
+    else if (field === "headCap") rows[empIdx].corrective = "Head cap fitted properly covering all hair completely";
     else if (field === "hygiene") rows[empIdx].corrective = "Hands scrubbed with antibacterial soap at wash station";
     else if (field === "nails") rows[empIdx].corrective = "Nails trimmed and sanitized before entry";
     else if (field === "health") rows[empIdx].corrective = "Minor cold symptoms noted, assigned to non-contact area";
   } else if (next === "OK") {
-    const stillFail = (rows[empIdx].uniform === 'X' || rows[empIdx].hygiene === 'X' || rows[empIdx].nails === 'X' || rows[empIdx].health === 'X');
+    const stillFail = (
+      rows[empIdx].uniform === 'X' ||
+      rows[empIdx].gloves === 'X' ||
+      rows[empIdx].headCap === 'X' ||
+      rows[empIdx].hygiene === 'X' ||
+      rows[empIdx].nails === 'X' ||
+      rows[empIdx].health === 'X'
+    );
     if (!stillFail) rows[empIdx].corrective = "";
   }
 
@@ -414,7 +522,7 @@ window.toggleMobileSidebar = function() {
 };
 
 // ──────────────────────────────────────────────────────────────────────────────
-// RENDER MONTHLY MATRIX
+// RENDER MONTHLY MATRIX (NO FUTURE DATES)
 // ──────────────────────────────────────────────────────────────────────────────
 function renderMonthlyGrid() {
   const totalDays = daysInMonth(currentYear, currentMonth);
@@ -424,13 +532,19 @@ function renderMonthlyGrid() {
   const table = document.getElementById('monthly-grid');
   if (!table) return;
 
-  // Ensure all month days are loaded in cache
+  // Ensure active audit days are in memory
   for (let d = 1; d <= totalDays; d++) {
     const ds = dateStr(currentYear, currentMonth, d);
+    if (ds < MIN_DATE || ds > MAX_DATE) continue;
+
     if (!allEmployeeRecords[ds]) {
       const local = localStorage.getItem(`lv_emp_${ds}`);
       if (local) {
-        try { allEmployeeRecords[ds] = JSON.parse(local); } catch(e) {}
+        try {
+          const parsed = JSON.parse(local);
+          const rws = Array.isArray(parsed) ? parsed : (parsed.rows || []);
+          allEmployeeRecords[ds] = rws.map(r => normalizeEmployeeRow(r, ds));
+        } catch(e) {}
       }
       if (!allEmployeeRecords[ds]) {
         allEmployeeRecords[ds] = createDefaultDay(ds);
@@ -443,18 +557,35 @@ function renderMonthlyGrid() {
   for (let d = 1; d <= totalDays; d++) {
     const ds = dateStr(currentYear, currentMonth, d);
     const isCurrent = (ds === currentDay);
-    headerHtml += `<th class="day-th ${isCurrent ? 'today-col' : ''}" onclick="selectDate('${ds}')">${d}</th>`;
+    const isFuture = (ds > MAX_DATE);
+    const isPreAudit = (ds < MIN_DATE);
+
+    if (isFuture || isPreAudit) {
+      headerHtml += `<th class="day-th text-muted" style="opacity:0.4; cursor:not-allowed;" title="${isFuture ? 'Future Date (Not Available)' : 'Pre-Audit'}">${d}</th>`;
+    } else {
+      headerHtml += `<th class="day-th ${isCurrent ? 'today-col' : ''}" onclick="selectDate('${ds}')">${d}</th>`;
+    }
   }
   headerHtml += `</tr></thead>`;
 
   // Build Rows
   let bodyHtml = '<tbody>';
   const monthIssues = [];
+  let evaluatedDays = 0;
 
   EMPLOYEES.forEach((empName) => {
     bodyHtml += `<tr><td class="name-col"><strong>${empName}</strong></td>`;
     for (let d = 1; d <= totalDays; d++) {
       const ds = dateStr(currentYear, currentMonth, d);
+      const isFuture = (ds > MAX_DATE);
+      const isPreAudit = (ds < MIN_DATE);
+
+      // STRICT REQUIREMENT: Future dates must not display data
+      if (isFuture || isPreAudit) {
+        bodyHtml += `<td class="day-cell cell-future" title="${isFuture ? 'Future Date' : 'Pre-Audit'}">—</td>`;
+        continue;
+      }
+
       const rows = allEmployeeRecords[ds] || [];
       const empRow = rows.find(r => r.name === empName);
 
@@ -463,7 +594,15 @@ function renderMonthlyGrid() {
         continue;
       }
 
-      const hasFail = (empRow.uniform === 'X' || empRow.hygiene === 'X' || empRow.nails === 'X' || empRow.health === 'X');
+      const hasFail = (
+        empRow.uniform === 'X' ||
+        empRow.gloves === 'X' ||
+        empRow.headCap === 'X' ||
+        empRow.hygiene === 'X' ||
+        empRow.nails === 'X' ||
+        empRow.health === 'X'
+      );
+
       if (hasFail) {
         monthIssues.push({ date: ds, name: empName, corrective: empRow.corrective || "Corrective action recorded" });
       }
@@ -480,11 +619,16 @@ function renderMonthlyGrid() {
 
   table.innerHTML = headerHtml + bodyHtml;
 
-  // Monthly stat pills
+  // Monthly stat pills (Only count evaluated days up to today)
+  for (let d = 1; d <= totalDays; d++) {
+    const ds = dateStr(currentYear, currentMonth, d);
+    if (ds >= MIN_DATE && ds <= MAX_DATE) evaluatedDays++;
+  }
+
   const statPills = document.getElementById('stat-pills');
   if (statPills) {
-    const totalChecks = EMPLOYEES.length * totalDays;
-    const okChecks = totalChecks - monthIssues.length;
+    const totalChecks = EMPLOYEES.length * (evaluatedDays || 1);
+    const okChecks = Math.max(0, totalChecks - monthIssues.length);
     const compliancePct = Math.round((okChecks / totalChecks) * 100);
 
     statPills.innerHTML = `
@@ -525,6 +669,7 @@ function renderMonthlyGrid() {
 }
 
 window.selectDate = function(ds) {
+  if (ds > MAX_DATE || ds < MIN_DATE) return;
   loadDay(ds);
   switchView('daily');
 };
@@ -546,7 +691,7 @@ window.saveData = async function(isSilent = false) {
 };
 
 // ──────────────────────────────────────────────────────────────────────────────
-// PERIOD & VIEW SWITCHING
+// PERIOD & VIEW SWITCHING (BOUNDED: APRIL 1, 2026 TO OCTOBER 19, 2026)
 // ──────────────────────────────────────────────────────────────────────────────
 window.changePeriod = function(delta) {
   if (currentView === 'daily') {
@@ -557,12 +702,24 @@ window.changePeriod = function(delta) {
     const newY = dateObj.getFullYear();
     const newM = String(dateObj.getMonth() + 1).padStart(2, '0');
     const newD = String(dateObj.getDate()).padStart(2, '0');
-    loadDay(`${newY}-${newM}-${newD}`);
+    const target = `${newY}-${newM}-${newD}`;
+
+    if (delta > 0 && target > MAX_DATE) return;
+    if (delta < 0 && target < MIN_DATE) return;
+
+    loadDay(target);
   } else {
-    currentMonth += delta;
-    if (currentMonth > 12) { currentMonth = 1; currentYear++; }
-    if (currentMonth < 1)  { currentMonth = 12; currentYear--; }
-    currentDay = dateStr(currentYear, currentMonth, 1);
+    let nextMonth = currentMonth + delta;
+    let nextYear = currentYear;
+    if (nextMonth > 12) { nextMonth = 1; nextYear++; }
+    if (nextMonth < 1)  { nextMonth = 12; nextYear--; }
+
+    if (nextYear > 2026 || (nextYear === 2026 && nextMonth > 10)) return;
+    if (nextYear < 2026 || (nextYear === 2026 && nextMonth < 4)) return;
+
+    currentMonth = nextMonth;
+    currentYear = nextYear;
+    currentDay = (currentYear === 2026 && currentMonth === 10) ? MAX_DATE : dateStr(currentYear, currentMonth, 1);
     loadDay(currentDay);
   }
 };
@@ -597,10 +754,11 @@ window.renderHistoryList = async function() {
     const k = localStorage.key(i);
     if (k && k.startsWith('lv_emp_')) {
       const d = k.replace('lv_emp_', '');
-      if (!allEmployeeRecords[d]) {
+      if (d >= MIN_DATE && d <= MAX_DATE && !allEmployeeRecords[d]) {
         try {
           const parsed = JSON.parse(localStorage.getItem(k));
-          allEmployeeRecords[d] = Array.isArray(parsed) ? parsed : (parsed?.rows || []);
+          const rws = Array.isArray(parsed) ? parsed : (parsed?.rows || []);
+          allEmployeeRecords[d] = rws.map(r => normalizeEmployeeRow(r, d));
         } catch(e) {}
       }
     }
@@ -616,7 +774,10 @@ window.renderHistoryList = async function() {
     const ySel = document.getElementById('hist-year-sel');
     const prefix = `${ySel ? ySel.value : '2026'}-${mSel ? String(mSel.value).padStart(2,'0') : '10'}`;
 
-    const dates = Object.keys(allEmployeeRecords).filter(k => k.startsWith(prefix)).sort().reverse();
+    const dates = Object.keys(allEmployeeRecords)
+      .filter(k => k.startsWith(prefix) && k >= MIN_DATE && k <= MAX_DATE)
+      .sort()
+      .reverse();
 
     if (dates.length === 0) {
       listContainer.innerHTML = `
@@ -632,11 +793,19 @@ window.renderHistoryList = async function() {
       let rows = allEmployeeRecords[ds];
       if (rows && !Array.isArray(rows) && Array.isArray(rows.rows)) {
         rows = rows.rows;
-        allEmployeeRecords[ds] = rows;
+        allEmployeeRecords[ds] = rows.map(r => normalizeEmployeeRow(r, ds));
       }
       if (!Array.isArray(rows)) rows = [];
 
-      const issues = rows.filter(r => r.uniform === 'X' || r.hygiene === 'X' || r.nails === 'X' || r.health === 'X').length;
+      const issues = rows.filter(r => (
+        r.uniform === 'X' ||
+        r.gloves === 'X' ||
+        r.headCap === 'X' ||
+        r.hygiene === 'X' ||
+        r.nails === 'X' ||
+        r.health === 'X'
+      )).length;
+
       return `
         <div class="history-item-row" onclick="selectDate('${ds}')">
           <div class="hist-card-left">
@@ -663,10 +832,11 @@ window.renderHistoryList = async function() {
     if (cloud && typeof cloud === 'object') {
       let changed = false;
       Object.keys(cloud).forEach(d => {
+        if (d < MIN_DATE || d > MAX_DATE) return;
         const item = cloud[d];
         const docRows = Array.isArray(item) ? item : (item?.rows || null);
         if (docRows && (!allEmployeeRecords[d] || allEmployeeRecords[d].length === 0)) {
-          allEmployeeRecords[d] = docRows;
+          allEmployeeRecords[d] = docRows.map(r => normalizeEmployeeRow(r, d));
           changed = true;
         }
       });
@@ -678,7 +848,7 @@ window.renderHistoryList = async function() {
 };
 
 // ──────────────────────────────────────────────────────────────────────────────
-// EXCEL EXPORT (SHEETJS MATCHING CLIENT PDF EXACTLY)
+// EXCEL EXPORT (SHEETJS WITH HAND GLOVES AND HEAD CAP)
 // ──────────────────────────────────────────────────────────────────────────────
 window.openExportModal = function() {
   document.getElementById('export-modal').style.display = 'flex';
@@ -713,7 +883,9 @@ window.exportReport = async function(type) {
       const wDate = new Date(monday);
       wDate.setDate(monday.getDate() + i);
       const wStr = `${wDate.getFullYear()}-${String(wDate.getMonth()+1).padStart(2,'0')}-${String(wDate.getDate()).padStart(2,'0')}`;
-      datesToExport.push(wStr);
+      if (wStr >= MIN_DATE && wStr <= MAX_DATE) {
+        datesToExport.push(wStr);
+      }
     }
     fileName = `LV_Spices_Employee_Hygiene_Weekly_${currentDay}.xlsx`;
   } else if (type === 'monthly' || type === 'october') {
@@ -723,22 +895,29 @@ window.exportReport = async function(type) {
     const y = (currentView === 'history' && ySel) ? parseInt(ySel.value) : currentYear;
     const totalDays = daysInMonth(y, m);
     for (let d = 1; d <= totalDays; d++) {
-      datesToExport.push(dateStr(y, m, d));
+      const ds = dateStr(y, m, d);
+      if (ds >= MIN_DATE && ds <= MAX_DATE) {
+        datesToExport.push(ds);
+      }
     }
     fileName = `LV_Spices_Employee_Hygiene_${getMonthName(m)}_${y}.xlsx`;
   } else if (type === 'all') {
-    datesToExport = Object.keys(allEmployeeRecords).sort();
+    datesToExport = Object.keys(allEmployeeRecords)
+      .filter(k => k >= MIN_DATE && k <= MAX_DATE)
+      .sort();
     fileName = `LV_Spices_Employee_Hygiene_Complete_Archive.xlsx`;
   } else if (type === 'custom') {
     const from = document.getElementById('export-from-date').value;
     const to = document.getElementById('export-to-date').value;
     if (!from || !to) { alert("Please select both dates."); return; }
-    datesToExport = Object.keys(allEmployeeRecords).filter(k => k >= from && k <= to).sort();
+    datesToExport = Object.keys(allEmployeeRecords)
+      .filter(k => k >= from && k <= to && k >= MIN_DATE && k <= MAX_DATE)
+      .sort();
     fileName = `LV_Spices_Employee_Hygiene_${from}_to_${to}.xlsx`;
   }
 
   if (datesToExport.length === 0) {
-    alert("No records to export.");
+    alert("No records to export within active audit period.");
     return;
   }
 
@@ -750,18 +929,20 @@ window.exportReport = async function(type) {
   const expMonth = (currentView === 'history' && mSel) ? parseInt(mSel.value) : currentMonth;
   const expYear = (currentView === 'history' && ySel) ? parseInt(ySel.value) : currentYear;
 
-  // Sheet Header matching Client Mockup
+  // Sheet Header matching Client Requirements
   sheetRows.push(["L V SPICES"]);
   sheetRows.push(["EMPLOYEE PERSONAL HYGIENE RECORD"]);
   sheetRows.push([`Month: ${getMonthName(expMonth)}`, `Year: ${expYear}`, `Department / Area: Manufacturing & Packaging`]);
   sheetRows.push([]); // blank
 
   // Table Columns:
-  // Date | Employee Name | Clean Uniform | Hand Hygiene | Nails / Hair | Health Status | Corrective Action | Checked By
+  // Date | Employee Name | Clean Uniform | Hand Gloves | Head Cap | Hand Hygiene | Nails / Hair | Health Status | Corrective Action | Checked By
   sheetRows.push([
     "Date",
     "Employee Name",
     "Clean Uniform",
+    "Hand Gloves",
+    "Head Cap",
     "Hand Hygiene",
     "Nails / Hair",
     "Health Status",
@@ -770,12 +951,15 @@ window.exportReport = async function(type) {
   ]);
 
   datesToExport.forEach(ds => {
-    const rows = allEmployeeRecords[ds] || createDefaultDay(ds);
+    const rawRows = allEmployeeRecords[ds] || createDefaultDay(ds);
+    const rows = rawRows.map(r => normalizeEmployeeRow(r, ds));
     rows.forEach(r => {
       sheetRows.push([
         ds,
         r.name,
         r.uniform,
+        r.gloves,
+        r.headCap,
         r.hygiene,
         r.nails,
         r.health,
@@ -787,7 +971,7 @@ window.exportReport = async function(type) {
 
   sheetRows.push([]);
   sheetRows.push(["Mark: OK = Satisfactory; X = Unsatisfactory; NA = Not Applicable. Record corrective actions and re-check any failures."]);
-  sheetRows.push([`Supervisor Name / Signature: Mukesh Vora`, "", "", "", "", "", `Date: ${currentDay}`]);
+  sheetRows.push([`Supervisor Name / Signature: Mukesh Vora`, "", "", "", "", "", "", "", `Date: ${currentDay}`]);
 
   const ws = XLSX.utils.aoa_to_sheet(sheetRows);
 
@@ -795,10 +979,12 @@ window.exportReport = async function(type) {
     { wch: 14 }, // Date
     { wch: 22 }, // Employee Name
     { wch: 16 }, // Clean Uniform
+    { wch: 15 }, // Hand Gloves
+    { wch: 15 }, // Head Cap
     { wch: 16 }, // Hand Hygiene
     { wch: 16 }, // Nails / Hair
     { wch: 16 }, // Health Status
-    { wch: 45 }, // Corrective Action
+    { wch: 50 }, // Corrective Action
     { wch: 18 }  // Checked By
   ];
 
@@ -837,5 +1023,5 @@ function escapeHtml(str) {
 // ──────────────────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   pregenerateHistoricalData();
-  await loadDay("2026-10-18");
+  await loadDay("2026-10-19");
 });
