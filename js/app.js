@@ -13,7 +13,7 @@ export const EMPLOYEES = [
 
 // Audit Date Bounds: Strictly April 1, 2026 to October 19, 2026 (No future dates)
 export const MIN_DATE = "2026-04-01";
-export const MAX_DATE = "2026-10-19";
+export const MAX_DATE = new Date().toISOString().split('T')[0]; // Always today
 
 // ──────────────────────────────────────────────────────────────────────────────
 // REGULAR DEFICIENCIES SCHEDULE (Every 8-10 Days across April - October 2026)
@@ -47,9 +47,9 @@ export const EMPLOYEE_DEFICIENCIES = {
 // ──────────────────────────────────────────────────────────────────────────────
 // STATE
 // ──────────────────────────────────────────────────────────────────────────────
-let currentYear = 2026;
-let currentMonth = 10;
-let currentDay = "2026-10-19"; // Default to today: Mon, 19 Oct 2026
+let currentYear = new Date().getFullYear();
+let currentMonth = new Date().getMonth() + 1;
+let currentDay = new Date().toISOString().split('T')[0]; // Always today
 let currentView = 'daily';
 let allEmployeeRecords = {}; // dateStr -> rows
 let hasUnsavedChanges = false;
@@ -107,7 +107,10 @@ function pregenerateHistoricalData() {
     { m: 7, days: 31 },
     { m: 8, days: 31 },
     { m: 9, days: 30 },
-    { m: 10, days: 19 } // Strictly up to today 19 October 2026
+    { m: 10, days: 31 },
+    { m: 11, days: 30 },
+    { m: 12, days: 31 }
+    // Dynamic cap handled by MAX_DATE check above
   ];
 
   for (const mInfo of months) {
@@ -719,7 +722,7 @@ window.changePeriod = function(delta) {
 
     currentMonth = nextMonth;
     currentYear = nextYear;
-    currentDay = (currentYear === 2026 && currentMonth === 10) ? MAX_DATE : dateStr(currentYear, currentMonth, 1);
+    currentDay = MAX_DATE;
     loadDay(currentDay);
   }
 };
