@@ -11,9 +11,14 @@ export const EMPLOYEES = [
   "Golu Yadav", "Mahesh", "Rajkumar", "Pratap", "Suraj", "Suchitra", "Anil"
 ];
 
-// Audit Date Bounds: Strictly April 1, 2026 to October 19, 2026 (No future dates)
+export function getTodayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+// Audit Date Bounds: Strictly April 1, 2026 to dynamic current day
 export const MIN_DATE = "2026-04-01";
-export const MAX_DATE = new Date().toISOString().split('T')[0]; // Always today
+export const MAX_DATE = getTodayStr();
 
 // ──────────────────────────────────────────────────────────────────────────────
 // REGULAR DEFICIENCIES SCHEDULE (Every 8-10 Days across April - October 2026)
@@ -49,7 +54,7 @@ export const EMPLOYEE_DEFICIENCIES = {
 // ──────────────────────────────────────────────────────────────────────────────
 let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth() + 1;
-let currentDay = new Date().toISOString().split('T')[0]; // Always today
+let currentDay = getTodayStr();
 let currentView = 'daily';
 let allEmployeeRecords = {}; // dateStr -> rows
 let hasUnsavedChanges = false;
@@ -1026,5 +1031,5 @@ function escapeHtml(str) {
 // ──────────────────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   pregenerateHistoricalData();
-  await loadDay("2026-10-19");
+  await loadDay(getTodayStr());
 });
