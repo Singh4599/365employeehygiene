@@ -326,6 +326,74 @@ html, body {
   gap: 10px;
 }
 
+/* ── Unit 11 / 12 Switcher ── */
+.unit-tab-group {
+  display: flex;
+  align-items: center;
+  background: rgba(14,94,58,0.07);
+  border: 1.5px solid rgba(14,94,58,0.18);
+  border-radius: 50px;
+  padding: 3px;
+  gap: 2px;
+}
+.unit-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  border-radius: 50px;
+  border: none;
+  background: transparent;
+  font-size: 12.5px;
+  font-weight: 700;
+  font-family: var(--font-ui);
+  color: #0E5E3A;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  letter-spacing: 0.02em;
+}
+.unit-tab-btn .unit-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.4;
+  transition: opacity 0.2s, transform 0.2s;
+  flex-shrink: 0;
+}
+.unit-tab-btn.active {
+  background: #0E5E3A;
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(14,94,58,0.28);
+}
+.unit-tab-btn.active .unit-dot {
+  opacity: 1;
+  transform: scale(1.2);
+  background: #FFD700;
+}
+.unit-tab-btn:hover:not(.active) {
+  background: rgba(14,94,58,0.1);
+}
+
+/* ── Unit Badge in hero meta row ── */
+.unit-badge-pill {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 5px;
+  background: #0E5E3A;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  padding: 3px 12px !important;
+  border-radius: 50px;
+  font-size: 12px !important;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.unit-badge-pill[data-unit="unit12"] {
+  background: #1A3A5C;
+}
+
+
+
 .btn-export-excel {
   display: inline-flex;
   align-items: center;

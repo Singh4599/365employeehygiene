@@ -58,6 +58,7 @@ let currentDay = getTodayStr();
 let currentView = 'daily';
 let allEmployeeRecords = {}; // dateStr -> rows
 let hasUnsavedChanges = false;
+let currentUnit = 'unit11'; // 'unit11' or 'unit12'
 
 // ──────────────────────────────────────────────────────────────────────────────
 // UTILITIES
@@ -1027,9 +1028,39 @@ function escapeHtml(str) {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
+// UNIT 11 / UNIT 12 SWITCHER
+// ──────────────────────────────────────────────────────────────────────────────
+window.switchUnit = function(unit, force) {
+  if (currentUnit === unit && !force) {
+    _applyUnitToDOM(unit);
+    return;
+  }
+  currentUnit = unit;
+  _applyUnitToDOM(unit);
+  localStorage.setItem('lv_hygiene_active_unit', unit);
+};
+
+function _applyUnitToDOM(unit) {
+  document.querySelectorAll('.unit-tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.unit === unit);
+  });
+  const unitBadge = document.getElementById('header-unit-badge');
+  if (unitBadge) {
+    unitBadge.textContent = unit === 'unit11' ? 'Unit 11' : 'Unit 12';
+    unitBadge.dataset.unit = unit;
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
 // INIT
 // ──────────────────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   pregenerateHistoricalData();
+
+  // Restore last active unit from localStorage
+  const savedUnit = localStorage.getItem('lv_hygiene_active_unit');
+  setTimeout(() => window.switchUnit(savedUnit === 'unit12' ? 'unit12' : 'unit11'), 0);
+  if (savedUnit === 'unit12') currentUnit = 'unit12';
+
   await loadDay(getTodayStr());
 });

@@ -13,7 +13,7 @@
   
   <!-- SheetJS for Excel Exports -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <link rel="stylesheet" href="css/style.css?v=3.2.0" />
+  <link rel="stylesheet" href="css/style.css?v=3.3.0" />
   <link rel="icon" type="image/jpeg" href="assets/favicon.jpg" />
   <link rel="apple-touch-icon" href="assets/favicon.jpg" />
 </head>
@@ -131,6 +131,15 @@
       </div>
 
       <div class="tab-right">
+        <!-- Unit 11 / Unit 12 Switcher -->
+        <div class="unit-tab-group">
+          <button class="unit-tab-btn active" data-unit="unit11" onclick="switchUnit('unit11')">
+            <span class="unit-dot"></span> Unit 11
+          </button>
+          <button class="unit-tab-btn" data-unit="unit12" onclick="switchUnit('unit12')">
+            <span class="unit-dot"></span> Unit 12
+          </button>
+        </div>
         <!-- Export Excel (.xlsx) -->
         <button class="btn-export-excel" onclick="openExportModal()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
@@ -220,6 +229,18 @@
               <div class="meta-detail">
                 <span class="meta-label">Department / Area</span>
                 <strong class="meta-val">Manufacturing &amp; Packaging</strong>
+              </div>
+            </div>
+
+            <div class="meta-divider"></div>
+
+            <div class="hero-meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+              </svg>
+              <div class="meta-detail">
+                <span class="meta-label">Unit</span>
+                <strong class="meta-val unit-badge-pill" id="header-unit-badge" data-unit="unit11">Unit 11</strong>
               </div>
             </div>
           </div>
