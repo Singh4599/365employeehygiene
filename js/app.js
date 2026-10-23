@@ -7,8 +7,8 @@ import { saveEmployeeDayToCloud, loadEmployeeDayFromCloud, loadAllEmployeeRecord
 // EMPLOYEES & DEFAULT LIST
 // ──────────────────────────────────────────────────────────────────────────────
 export const EMPLOYEES = [
-  "BHIMLAL SHARMA", "Mukesh Vora", "Vinod Singh", "Vishal Chaturvedi",
-  "SHIVSHANKAR YADAV", "Mahesh", "Rajkumar", "SANVALDAS", "Suraj", "Suchitra", "Anil"
+  "Bhimlal Sharma", "Mukesh Vora", "Vinod Singh", "Vishal Chaturvedi",
+  "Shiveshankar Yadav", "Mahesh", "Rajkumar", "Sanvaldas", "Suraj", "Suchitra", "Anil"
 ];
 
 export function getTodayStr() {
@@ -25,26 +25,26 @@ export const MAX_DATE = getTodayStr();
 // ──────────────────────────────────────────────────────────────────────────────
 export const EMPLOYEE_DEFICIENCIES = {
   "2026-04-08": { badEmp: "Suraj",             field: "gloves",  text: "Hand gloves torn during sorting, discarded & sterile pair issued before shift" },
-  "2026-04-16": { badEmp: "SANVALDAS",            field: "headCap", text: "Hair strands protruding from cap, replaced with fresh elastic head cap" },
+  "2026-04-16": { badEmp: "Sanvaldas",            field: "headCap", text: "Hair strands protruding from cap, replaced with fresh elastic head cap" },
   "2026-04-25": { badEmp: "Mahesh",            field: "uniform", text: "Uniform apron stained with spice blend, fresh clean apron provided" },
-  "2026-05-04": { badEmp: "SHIVSHANKAR YADAV",        field: "nails",   text: "Nails untrimmed, trimmed on spot & sanitized before shift entry" },
+  "2026-05-04": { badEmp: "Shiveshankar Yadav",        field: "nails",   text: "Nails untrimmed, trimmed on spot & sanitized before shift entry" },
   "2026-05-13": { badEmp: "Suchitra",          field: "gloves",  text: "Gloves had minor puncture, replaced immediately with fresh nitrile pair" },
   "2026-05-22": { badEmp: "Anil",              field: "headCap", text: "Head cap missing at morning lineup, sterile head cap issued before entry" },
   "2026-05-30": { badEmp: "Vinod Singh",        field: "uniform", text: "Apron strap loose, replaced with fresh clean apron before packing" },
   "2026-06-08": { badEmp: "Rajkumar",          field: "nails",   text: "Nails untrimmed, trimmed on spot & sanitized before shift entry" },
   "2026-06-17": { badEmp: "Suraj",             field: "gloves",  text: "Gloves worn out, replaced with food-grade nitrile gloves" },
-  "2026-06-26": { badEmp: "SANVALDAS",            field: "headCap", text: "Head cap worn improperly, repositioned and hair completely enclosed" },
+  "2026-06-26": { badEmp: "Sanvaldas",            field: "headCap", text: "Head cap worn improperly, repositioned and hair completely enclosed" },
   "2026-07-05": { badEmp: "Vishal Chaturvedi", field: "uniform", text: "Uniform soiled, replacement clean apron provided" },
   "2026-07-14": { badEmp: "Mahesh",            field: "nails",   text: "Nails untrimmed, trimmed on spot & sanitized before shift entry" },
-  "2026-07-23": { badEmp: "SHIVSHANKAR YADAV",        field: "gloves",  text: "Hand gloves torn, discarded & sterile pair issued before shift" },
+  "2026-07-23": { badEmp: "Shiveshankar Yadav",        field: "gloves",  text: "Hand gloves torn, discarded & sterile pair issued before shift" },
   "2026-08-02": { badEmp: "Suchitra",          field: "headCap", text: "Head cap loose, replaced with secure elastic cap before cleanroom entry" },
   "2026-08-11": { badEmp: "Anil",              field: "uniform", text: "Uniform apron stained, fresh clean apron provided" },
-  "2026-08-20": { badEmp: "SANVALDAS",            field: "nails",   text: "Nails untrimmed, trimmed on spot & sanitized before shift entry" },
+  "2026-08-20": { badEmp: "Sanvaldas",            field: "nails",   text: "Nails untrimmed, trimmed on spot & sanitized before shift entry" },
   "2026-08-29": { badEmp: "Suraj",             field: "gloves",  text: "Hand gloves replaced with sterile pair before food handling" },
   "2026-09-07": { badEmp: "Rajkumar",          field: "headCap", text: "Head cap replaced with fresh clean cap before line startup" },
   "2026-09-16": { badEmp: "Vinod Singh",        field: "uniform", text: "Apron soiled during batch prep, clean attire verified" },
   "2026-09-25": { badEmp: "Mahesh",            field: "nails",   text: "Nails untrimmed, trimmed on spot & sanitized before entry" },
-  "2026-10-04": { badEmp: "SANVALDAS",            field: "gloves",  text: "Hand gloves torn during spice handling, sterile pair issued" },
+  "2026-10-04": { badEmp: "Sanvaldas",            field: "gloves",  text: "Hand gloves torn during spice handling, sterile pair issued" },
   "2026-10-12": { badEmp: "Suraj",             field: "headCap", text: "Head cap misplaced, replacement hairnet/head cap issued before shift" },
   "2026-10-18": { badEmp: "Anil",              field: "uniform", text: "Uniform apron stained with turmeric, fresh clean apron issued immediately" }
 };
