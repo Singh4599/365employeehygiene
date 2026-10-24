@@ -1512,3 +1512,37 @@ html, body {
     border: 1px solid #D0D5DD !important;
   }
 }
+
+/* ─── A4 PORTRAIT PRINT ─────────────────────────────────────────── */
+@media print {
+  @page { size: A4 portrait; margin: 8mm; }
+
+  /* Hide chrome */
+  .sidebar, .sidebar-overlay, .topbar,
+  .hero-banner-card, .kpi-strip, .kpi-row,
+  button, .btn, .compliance-strip,
+  #view-monthly, #view-archive { display: none !important; }
+
+  body, .main-layout, .main-content, .content-body,
+  .view-panel, #view-register, #view-today {
+    margin: 0 !important; padding: 0 !important;
+    width: 100% !important; max-width: 100% !important;
+    background: #fff !important;
+    box-shadow: none !important;
+  }
+
+  table { width: 100% !important; border-collapse: collapse !important; font-size: 7.5pt !important; }
+  thead { display: table-header-group; }
+  tr { page-break-inside: avoid; }
+  th { background: #1a1a1a !important; color: #fff !important;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    font-size: 7pt !important; padding: 4pt 3pt !important;
+    border: 0.75pt solid #000 !important; }
+  td { font-size: 7.5pt !important; padding: 3pt !important;
+    border: 0.5pt solid #999 !important; vertical-align: middle !important; }
+
+  .status-ok, .status-x, .status-pill, [class*="status-"],
+  .badge, .ok-badge { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  th:last-child, td:last-child { display: none !important; }
+}
