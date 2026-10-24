@@ -1064,3 +1064,62 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   await loadDay(getTodayStr());
 });
+
+// ── PRINT A4 (popup window — captures rendered table) ──
+window.printA4 = function() {
+  const tbl = document.getElementById('daily-table');
+  if (!tbl) { alert('No table found.'); return; }
+  const dateEl = document.getElementById('header-date');
+  const unitEl = document.getElementById('header-unit-badge');
+  const dateStr = dateEl ? dateEl.textContent : currentDay;
+  const unitStr = unitEl ? unitEl.textContent : 'Unit 11';
+
+  // Clone table, strip action/button columns
+  const clone = tbl.cloneNode(true);
+  clone.querySelectorAll('th:last-child, td:last-child, button, .table-action-btn').forEach(el => el.remove());
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"/>
+<title>LV Spices — Employee Hygiene Record</title>
+<style>
+  @page{size:A4 landscape;margin:0}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{font-family:Arial,sans-serif;font-size:7.5pt;color:#000;background:#fff}
+  .wrap{width:270mm;margin:8mm auto}
+  .hdr{border:2pt solid #000;padding:6pt 8pt;margin-bottom:5pt}
+  .hdr h1{font-size:12pt;font-weight:800;text-transform:uppercase}
+  .hdr p{font-size:7pt;color:#444;margin-top:2pt}
+  .pills{display:flex;gap:5pt;margin-top:4pt;flex-wrap:wrap}
+  .pill{border:1pt solid #555;padding:1pt 5pt;font-size:6.5pt;border-radius:3pt}
+  .pill b{color:#B91C1C}
+  table{width:100%;border-collapse:collapse;table-layout:auto;margin-top:3pt}
+  thead{display:table-header-group}
+  tr{page-break-inside:avoid}
+  th{background:#1a1a1a!important;color:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-size:6.5pt;padding:4pt 3pt;border:0.75pt solid #000;white-space:nowrap}
+  td{font-size:7pt;padding:3pt;border:0.5pt solid #aaa;vertical-align:middle}
+  tr:nth-child(even) td{background:#fafafa}
+  .sig{margin-top:10pt;font-size:8pt}
+</style></head><body>
+<div class="wrap">
+<div class="hdr">
+  <h1>Employee Personal Hygiene Record — L V Spices</h1>
+  <p>FSSAI Schedule 4 GMP Compliance • Daily Personal Hygiene & Grooming Log</p>
+  <div class="pills">
+    <span class="pill">📅 Date: <b>${dateStr}</b></span>
+    <span class="pill">🏭 Unit: <b>${unitStr}</b></span>
+    <span class="pill">🖨️ Printed: <b>${new Date().toLocaleDateString('en-IN')}</b></span>
+  </div>
+</div>
+${clone.outerHTML}
+<div class="sig">
+  <b>Supervisor Name / Signature:</b> &nbsp;&nbsp;&nbsp; <i>Mukesh Vora</i>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <b>Date:</b> ${dateStr}
+</div>
+</div>
+<script>window.onload=function(){window.print();setTimeout(function(){window.close();},800);};<\/script>
+</body></html>`;
+
+  const pw = window.open('','_blank','width=1123,height=794');
+  if(pw){pw.document.write(html);pw.document.close();}
+  else{alert('Allow popups to use Print A4.');}
+};
