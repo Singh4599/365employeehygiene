@@ -1065,61 +1065,82 @@ window.addEventListener('DOMContentLoaded', async () => {
   await loadDay(getTodayStr());
 });
 
-// ── PRINT A4 (popup window — captures rendered table) ──
+// ── PRINT A4 — builds from data, full A4 landscape ──
 window.printA4 = function() {
-  const tbl = document.getElementById('daily-table');
-  if (!tbl) { alert('No table found.'); return; }
+  const rows = allEmployeeRecords[currentDay];
+  if (!rows || rows.length === 0) { alert('No records for this date.'); return; }
   const dateEl = document.getElementById('header-date');
   const unitEl = document.getElementById('header-unit-badge');
-  const dateStr = dateEl ? dateEl.textContent : currentDay;
-  const unitStr = unitEl ? unitEl.textContent : 'Unit 11';
+  const dateStr = dateEl ? dateEl.textContent.trim() : currentDay;
+  const unitStr = unitEl ? unitEl.textContent.trim() : 'Unit 11';
 
-  // Clone table, strip action/button columns
-  const clone = tbl.cloneNode(true);
-  clone.querySelectorAll('th:last-child, td:last-child, button, .table-action-btn').forEach(el => el.remove());
+  function esc(s){ return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''; }
+  function badge(v){
+    if(v==='OK') return '<span style="background:#16a34a;color:#fff;padding:1pt 5pt;border-radius:3pt;font-size:6.5pt;font-weight:700;white-space:nowrap;-webkit-print-color-adjust:exact;print-color-adjust:exact">✔ OK</span>';
+    if(v==='X')  return '<span style="background:#dc2626;color:#fff;padding:1pt 5pt;border-radius:3pt;font-size:6.5pt;font-weight:700;white-space:nowrap;-webkit-print-color-adjust:exact;print-color-adjust:exact">✖ X</span>';
+    return '<span style="color:#888">—</span>';
+  }
+
+  const rowsHtml = rows.map((r,i) => `<tr style="${i%2===1?'background:#f7f7f7':''}">
+    <td style="text-align:center">${i+1}</td>
+    <td>${esc(currentDay)}</td>
+    <td><b>${esc(r.name)}</b></td>
+    <td style="text-align:center">${badge(r.uniform)}</td>
+    <td style="text-align:center">${badge(r.gloves)}</td>
+    <td style="text-align:center">${badge(r.headCap)}</td>
+    <td style="text-align:center">${badge(r.hygiene)}</td>
+    <td style="text-align:center">${badge(r.nails)}</td>
+    <td style="text-align:center">${badge(r.health)}</td>
+    <td>${r.corrective ? `⚠ ${esc(r.corrective)}` : '—'}</td>
+    <td>${esc(r.checkedBy||'Mukesh Vora')}</td>
+  </tr>`).join('');
 
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"/>
 <title>LV Spices — Employee Hygiene Record</title>
 <style>
-  @page{size:A4 landscape;margin:0}
+  @page{size:A4 landscape;margin:8mm}
   *{margin:0;padding:0;box-sizing:border-box}
-  html,body{font-family:Arial,sans-serif;font-size:7.5pt;color:#000;background:#fff}
-  .wrap{width:270mm;margin:8mm auto}
-  .hdr{border:2pt solid #000;padding:6pt 8pt;margin-bottom:5pt}
-  .hdr h1{font-size:12pt;font-weight:800;text-transform:uppercase}
+  html,body{font-family:Arial,sans-serif;font-size:8pt;color:#000;background:#fff}
+  .hdr{border:2pt solid #000;padding:6pt 8pt;margin-bottom:6pt}
+  .hdr h1{font-size:13pt;font-weight:800;text-transform:uppercase}
   .hdr p{font-size:7pt;color:#444;margin-top:2pt}
-  .pills{display:flex;gap:5pt;margin-top:4pt;flex-wrap:wrap}
-  .pill{border:1pt solid #555;padding:1pt 5pt;font-size:6.5pt;border-radius:3pt}
+  .pills{display:flex;gap:6pt;margin-top:5pt;flex-wrap:wrap}
+  .pill{border:1pt solid #555;padding:1pt 6pt;font-size:7pt;border-radius:3pt}
   .pill b{color:#B91C1C}
-  table{width:100%;border-collapse:collapse;table-layout:auto;margin-top:3pt}
+  table{width:100%;border-collapse:collapse;margin-top:5pt}
   thead{display:table-header-group}
   tr{page-break-inside:avoid}
-  th{background:#1a1a1a!important;color:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-size:6.5pt;padding:4pt 3pt;border:0.75pt solid #000;white-space:nowrap}
-  td{font-size:7pt;padding:3pt;border:0.5pt solid #aaa;vertical-align:middle}
-  tr:nth-child(even) td{background:#fafafa}
-  .sig{margin-top:10pt;font-size:8pt}
+  th{background:#1a1a1a;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-size:7pt;padding:5pt 4pt;border:0.75pt solid #000;white-space:nowrap;text-align:left}
+  td{font-size:8pt;padding:5pt 4pt;border:0.5pt solid #bbb;vertical-align:middle}
+  .sig{margin-top:14pt;font-size:8.5pt;display:flex;justify-content:space-between}
 </style></head><body>
-<div class="wrap">
 <div class="hdr">
   <h1>Employee Personal Hygiene Record — L V Spices</h1>
-  <p>FSSAI Schedule 4 GMP Compliance • Daily Personal Hygiene & Grooming Log</p>
+  <p>FSSAI Schedule 4 GMP Compliance &bull; Daily Personal Hygiene &amp; Grooming Log</p>
   <div class="pills">
     <span class="pill">📅 Date: <b>${dateStr}</b></span>
     <span class="pill">🏭 Unit: <b>${unitStr}</b></span>
+    <span class="pill">👤 Employees: <b>${rows.length}</b></span>
     <span class="pill">🖨️ Printed: <b>${new Date().toLocaleDateString('en-IN')}</b></span>
   </div>
 </div>
-${clone.outerHTML}
+<table>
+  <thead><tr>
+    <th style="width:5%">#</th><th style="width:9%">DATE</th><th style="width:14%">EMPLOYEE NAME</th>
+    <th style="width:8%">CLEAN UNIFORM</th><th style="width:8%">HAND GLOVES</th><th style="width:8%">HEAD CAP</th>
+    <th style="width:8%">HAND HYGIENE</th><th style="width:8%">NAILS / HAIR</th><th style="width:9%">HEALTH STATUS</th>
+    <th style="width:16%">CORRECTIVE ACTION</th><th style="width:10%">CHECKED BY</th>
+  </tr></thead>
+  <tbody>${rowsHtml}</tbody>
+</table>
 <div class="sig">
-  <b>Supervisor Name / Signature:</b> &nbsp;&nbsp;&nbsp; <i>Mukesh Vora</i>
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <b>Date:</b> ${dateStr}
-</div>
+  <span><b>Supervisor Name / Signature:</b> &nbsp;&nbsp; <i>Mukesh Vora</i></span>
+  <span><b>Date:</b> ${dateStr}</span>
 </div>
 <script>window.onload=function(){window.print();setTimeout(function(){window.close();},800);};<\/script>
 </body></html>`;
 
-  const pw = window.open('','_blank','width=1123,height=794');
+  const pw = window.open('','_blank','width=1200,height=850');
   if(pw){pw.document.write(html);pw.document.close();}
   else{alert('Allow popups to use Print A4.');}
 };
