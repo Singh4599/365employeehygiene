@@ -1081,7 +1081,8 @@ window.printA4 = function() {
     return '<span style="color:#888">—</span>';
   }
 
-  const rowsHtml = rows.map((r,i) => `<tr style="${i%2===1?'background:#f7f7f7':''}">
+  const rowH = Math.max(10, Math.floor(148 / rows.length));
+  const rowsHtml = rows.map((r,i) => `<tr style="height:${rowH}mm;${i%2===1?'background:#f7f7f7':''}">
     <td style="text-align:center">${i+1}</td>
     <td>${esc(currentDay)}</td>
     <td><b>${esc(r.name)}</b></td>
