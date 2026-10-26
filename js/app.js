@@ -1145,3 +1145,186 @@ window.printA4 = function() {
   if(pw){pw.document.write(html);pw.document.close();}
   else{alert('Allow popups to use Print A4.');}
 };
+
+// ─── PRINT A4 RANGE MODAL ───────────────────────────────────────────────────
+let _printTab = 'single';
+
+window.openPrintModal = function() {
+  const today = getTodayStr();
+  const modal = document.getElementById('print-modal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  _printTab = 'single';
+  setPrintTab('single');
+  // Set today label
+  const lbl = document.getElementById('pm-single-date-label');
+  if (lbl) {
+    const [y,m,d] = today.split('-');
+    lbl.textContent = `${d}/${m}/${y}`;
+  }
+  // Set date input max to today
+  const fromEl = document.getElementById('pm-from-date');
+  const toEl   = document.getElementById('pm-to-date');
+  if (fromEl) { fromEl.max = today; fromEl.value = today; }
+  if (toEl)   { toEl.max   = today; toEl.value   = today; }
+  // Set month/year to current
+  const todayParts = today.split('-');
+  const mSel = document.getElementById('pm-month-sel');
+  const ySel = document.getElementById('pm-year-sel');
+  if (mSel) mSel.value = todayParts[1];
+  if (ySel) ySel.value = todayParts[0];
+  updateMonthPreview();
+  updateRangeInfo();
+};
+
+window.closePrintModal = function() {
+  const modal = document.getElementById('print-modal');
+  if (modal) modal.style.display = 'none';
+};
+
+window.setPrintTab = function(tab) {
+  _printTab = tab;
+  ['single','range','month'].forEach(t => {
+    const btn   = document.getElementById(`pm-tab-${t}`);
+    const panel = document.getElementById(`pm-panel-${t}`);
+    const active = t === tab;
+    if (btn)   { btn.style.background   = active ? '#1a1a2e' : '#fff'; btn.style.color = active ? '#fff' : '#555'; btn.style.borderColor = active ? '#1a1a2e' : '#e2e8f0'; }
+    if (panel) panel.style.display = active ? '' : 'none';
+  });
+};
+
+function _hygUpdateRangeInfo() {
+  const info  = document.getElementById('pm-range-info');
+  const from  = document.getElementById('pm-from-date');
+  const to    = document.getElementById('pm-to-date');
+  if (!info || !from || !to) return;
+  const today = getTodayStr();
+  if (to.value > today)   { to.value   = today; }
+  if (from.value > today) { from.value = today; }
+  if (from.value && to.value && from.value <= to.value) {
+    const days = Math.round((new Date(to.value) - new Date(from.value)) / 86400000) + 1;
+    info.style.display = '';
+    info.style.color = '#374151';
+    info.textContent = `📄 ${days} page${days > 1 ? 's' : ''} will be printed (one per day).${days > 31 ? ' ⚠️ Large range.' : ''}`;
+  } else if (from.value && to.value && from.value > to.value) {
+    info.style.display = '';
+    info.style.color = '#dc2626';
+    info.textContent = '⚠️ "From" date must be before "To" date.';
+  } else { info.style.display = 'none'; }
+}
+function updateRangeInfo() { _hygUpdateRangeInfo(); }
+
+window.updateMonthPreview = function() {
+  const mSel = document.getElementById('pm-month-sel');
+  const ySel = document.getElementById('pm-year-sel');
+  const info = document.getElementById('pm-month-info');
+  if (!mSel || !ySel || !info) return;
+  const m = mSel.value; const y = ySel.value;
+  const today = getTodayStr();
+  const [todayY, todayM] = today.split('-');
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  if (y > todayY || (y === todayY && m > todayM)) {
+    info.style.background = '#fef2f2'; info.style.borderColor = '#fecaca'; info.style.color = '#dc2626';
+    info.textContent = `⛔ ${monthNames[parseInt(m)-1]} ${y} is a future month — printing not allowed.`; return;
+  }
+  const daysInMonth = new Date(parseInt(y), parseInt(m), 0).getDate();
+  const printableDays = (y === todayY && m === todayM) ? parseInt(today.split('-')[2]) : daysInMonth;
+  info.style.background = '#f0fdf4'; info.style.borderColor = '#a7f3d0'; info.style.color = '#374151';
+  info.textContent = `📅 ${monthNames[parseInt(m)-1]} ${y} — ${printableDays} pages will be printed.${printableDays < daysInMonth ? ' (up to today)' : ''}`;
+};
+
+window.executePrint = function() {
+  const today = getTodayStr();
+  if (_printTab === 'single') { closePrintModal(); printA4(); return; }
+  let dates = [];
+  if (_printTab === 'range') {
+    const from = document.getElementById('pm-from-date');
+    const to   = document.getElementById('pm-to-date');
+    if (!from.value || !to.value) { alert('Please select both From and To dates.'); return; }
+    if (from.value > today) { alert('From date cannot be a future date.'); return; }
+    if (to.value > today)   { alert('To date cannot be a future date.'); return; }
+    if (from.value > to.value) { alert('From date must be before or equal To date.'); return; }
+    const days = Math.round((new Date(to.value) - new Date(from.value)) / 86400000) + 1;
+    if (days > 62 && !confirm(`You are about to print ${days} pages. Continue?`)) return;
+    let cur = new Date(from.value); const end = new Date(to.value);
+    while (cur <= end) { dates.push(cur.toISOString().split('T')[0]); cur.setDate(cur.getDate()+1); }
+  }
+  if (_printTab === 'month') {
+    const m = document.getElementById('pm-month-sel').value.padStart(2,'0');
+    const y = document.getElementById('pm-year-sel').value;
+    const [todayY, todayM, todayD] = today.split('-');
+    if (y > todayY || (y === todayY && m > todayM)) { alert('Future month — printing not allowed.'); return; }
+    const lastDay = (y === todayY && m === todayM) ? parseInt(todayD) : new Date(parseInt(y), parseInt(m), 0).getDate();
+    dates = Array.from({length: lastDay}, (_,i) => `${y}-${m}-${String(i+1).padStart(2,'0')}`);
+  }
+  if (!dates.length) return;
+  closePrintModal();
+  const unitStr = (document.getElementById('pm-unit-sel') || {}).value || 'Unit 11';
+  _printHygieneRange(dates, unitStr);
+};
+
+function _printHygieneRange(dates, unitStr) {
+  function esc(s){ return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''; }
+  function badge(v){
+    if(v==='OK') return '<span style="background:#16a34a;color:#fff;padding:1pt 5pt;border-radius:3pt;font-size:6.5pt;font-weight:700;-webkit-print-color-adjust:exact;print-color-adjust:exact">✔ OK</span>';
+    if(v==='X')  return '<span style="background:#dc2626;color:#fff;padding:1pt 5pt;border-radius:3pt;font-size:6.5pt;font-weight:700;-webkit-print-color-adjust:exact;print-color-adjust:exact">✖ X</span>';
+    return '<span style="color:#888">—</span>';
+  }
+  const pagesHtml = dates.map((ds, pageIdx) => {
+    const rows  = allEmployeeRecords[ds] || [];
+    const [y,m,d] = ds.split('-'); const dateStr = `${d}/${m}/${y}`;
+    const rowH  = rows.length ? Math.max(8, Math.floor(148 / rows.length)) : 20;
+    const rowsHtml = rows.map((r,i) => `<tr style="height:${rowH}mm;${i%2===1?'background:#f7f7f7':''}">
+      <td style="text-align:center">${i+1}</td><td>${esc(ds)}</td><td><b>${esc(r.name)}</b></td>
+      <td style="text-align:center">${badge(r.uniform)}</td><td style="text-align:center">${badge(r.gloves)}</td>
+      <td style="text-align:center">${badge(r.headCap)}</td><td style="text-align:center">${badge(r.hygiene)}</td>
+      <td style="text-align:center">${badge(r.nails)}</td><td style="text-align:center">${badge(r.health)}</td>
+      <td>${r.corrective ? `⚠ ${esc(r.corrective)}` : '—'}</td><td>${esc(r.checkedBy||'Mukesh Vora')}</td>
+    </tr>`).join('') || `<tr><td colspan="11" style="text-align:center;color:#888;padding:20pt">No records for ${dateStr}</td></tr>`;
+    return `<div style="page-break-after:${pageIdx<dates.length-1?'always':'avoid'}">
+<div style="border:2pt solid #000;padding:6pt 8pt;margin-bottom:6pt">
+  <h1 style="font-size:13pt;font-weight:800;text-transform:uppercase">Employee Personal Hygiene Record — L V Spices</h1>
+  <p style="font-size:7pt;color:#444;margin-top:2pt">FSSAI Schedule 4 GMP Compliance • Daily Personal Hygiene &amp; Grooming Log</p>
+  <div style="display:flex;gap:6pt;margin-top:5pt;flex-wrap:wrap">
+    <span style="border:1pt solid #555;padding:1pt 6pt;font-size:7pt;border-radius:3pt">📅 Date: <b style="color:#B91C1C">${dateStr}</b></span>
+    <span style="border:1pt solid #555;padding:1pt 6pt;font-size:7pt;border-radius:3pt">🏭 Unit: <b style="color:#B91C1C">${esc(unitStr)}</b></span>
+    <span style="border:1pt solid #555;padding:1pt 6pt;font-size:7pt;border-radius:3pt">👤 Employees: <b style="color:#B91C1C">${rows.length}</b></span>
+    <span style="border:1pt solid #555;padding:1pt 6pt;font-size:7pt;border-radius:3pt">🖨️ Printed: <b>${new Date().toLocaleDateString('en-IN')}</b></span>
+  </div>
+</div>
+<table style="width:100%;border-collapse:collapse;font-size:8pt">
+  <thead style="display:table-header-group"><tr>
+    <th style="background:#1a1a1a;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-size:7pt;padding:5pt 4pt;border:0.75pt solid #000;width:5%;text-align:center">#</th>
+    <th style="background:#1a1a1a;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-size:7pt;padding:5pt 4pt;border:0.75pt solid #000;width:9%">DATE</th>
+    <th style="background:#1a1a1a;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-size:7pt;padding:5pt 4pt;border:0.75pt solid #000;width:14%">EMPLOYEE NAME</th>
+    <th style="background:#1a1a1a;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-size:7pt;padding:5pt 4pt;border:0.75pt solid #000;text-align:center">UNIFORM</th>
+    <th style="background:#1a1a1a;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-size:7pt;padding:5pt 4pt;border:0.75pt solid #000;text-align:center">GLOVES</th>
+    <th style="background:#1a1a1a;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-size:7pt;padding:5pt 4pt;border:0.75pt solid #000;text-align:center">HEAD CAP</th>
+    <th style="background:#1a1a1a;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-size:7pt;padding:5pt 4pt;border:0.75pt solid #000;text-align:center">HAND HYGIENE</th>
+    <th style="background:#1a1a1a;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-size:7pt;padding:5pt 4pt;border:0.75pt solid #000;text-align:center">NAILS/HAIR</th>
+    <th style="background:#1a1a1a;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-size:7pt;padding:5pt 4pt;border:0.75pt solid #000;text-align:center">HEALTH</th>
+    <th style="background:#1a1a1a;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-size:7pt;padding:5pt 4pt;border:0.75pt solid #000">CORRECTIVE ACTION</th>
+    <th style="background:#1a1a1a;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-size:7pt;padding:5pt 4pt;border:0.75pt solid #000">CHECKED BY</th>
+  </tr></thead>
+  <tbody>${rowsHtml}</tbody>
+</table></div>`;
+  }).join('');
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>LV Spices — Employee Hygiene Record</title>
+<style>@page{size:A4 landscape;margin:8mm}*{margin:0;padding:0;box-sizing:border-box}html,body{font-family:Arial,sans-serif;font-size:8pt;color:#000;background:#fff}td{padding:4pt;border:0.5pt solid #bbb;vertical-align:middle}</style>
+</head><body>${pagesHtml}<script>window.onload=function(){window.print();setTimeout(function(){window.close();},800);};<\/script></body></html>`;
+  const pw = window.open('','_blank','width=1200,height=850');
+  if(pw){pw.document.write(html);pw.document.close();}
+  else{alert('Allow popups to use Print.');}
+}
+
+function _initHygPrintListeners() {
+  const from = document.getElementById('pm-from-date');
+  const to   = document.getElementById('pm-to-date');
+  if (from) { from.addEventListener('change', _hygUpdateRangeInfo); from.addEventListener('input', _hygUpdateRangeInfo); }
+  if (to)   { to.addEventListener('change', _hygUpdateRangeInfo);   to.addEventListener('input', _hygUpdateRangeInfo); }
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', _initHygPrintListeners);
+} else {
+  _initHygPrintListeners();
+}
