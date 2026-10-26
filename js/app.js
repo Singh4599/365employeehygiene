@@ -1122,7 +1122,6 @@ window.printA4 = function() {
     <span class="pill">📅 Date: <b>${dateStr}</b></span>
     <span class="pill">🏭 Unit: <b>${unitStr}</b></span>
     <span class="pill">👤 Employees: <b>${rows.length}</b></span>
-    <span class="pill">🖨️ Printed: <b>${new Date().toLocaleDateString('en-IN')}</b></span>
   </div>
 </div>
 <table>
@@ -1289,7 +1288,6 @@ function _printHygieneRange(dates, unitStr) {
     <span style="border:1pt solid #555;padding:1pt 6pt;font-size:7pt;border-radius:3pt">📅 Date: <b style="color:#B91C1C">${dateStr}</b></span>
     <span style="border:1pt solid #555;padding:1pt 6pt;font-size:7pt;border-radius:3pt">🏭 Unit: <b style="color:#B91C1C">${esc(unitStr)}</b></span>
     <span style="border:1pt solid #555;padding:1pt 6pt;font-size:7pt;border-radius:3pt">👤 Employees: <b style="color:#B91C1C">${rows.length}</b></span>
-    <span style="border:1pt solid #555;padding:1pt 6pt;font-size:7pt;border-radius:3pt">🖨️ Printed: <b>${new Date().toLocaleDateString('en-IN')}</b></span>
   </div>
 </div>
 <table style="width:100%;border-collapse:collapse;font-size:8pt">
